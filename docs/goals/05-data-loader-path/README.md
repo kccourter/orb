@@ -25,6 +25,8 @@ Once the visualization and comparison loop works, the next leverage point is loa
 5. Add frontend scenario selection and validation feedback.
 6. Add fixtures and regression tests for representative inputs.
 
+See [PLAN.md](PLAN.md) for approval-sized implementation increments.
+
 ## Design Notes
 
 - Keep raw source parsing on the Python side when Orekit provides robust support.

@@ -24,6 +24,8 @@ Frame switching turns the visualization from a pretty orbit viewer into a tool f
 4. Implement a first local orbital frame view.
 5. Add visual and numerical checks for transform correctness.
 
+See [PLAN.md](PLAN.md) for approval-sized implementation increments.
+
 ## Design Notes
 
 - Prefer Orekit for authoritative frame transforms.

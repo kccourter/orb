@@ -23,6 +23,8 @@ This creates the minimum useful visualization loop: TLE input, browser-side prop
 3. Add deterministic epoch handling and basic sample controls.
 4. Add frontend validation notes and smoke-test instructions.
 
+See [PLAN.md](PLAN.md) for approval-sized implementation increments.
+
 ## Design Notes
 
 - Treat `satellite.js` output as a visualization path, not the authoritative dynamics model.

@@ -24,6 +24,8 @@ The project becomes analytically useful once it can compare propagation sources 
 4. Compute divergence metrics and expose a minimal readout.
 5. Add tests or fixtures for sample alignment and distance calculations.
 
+See [PLAN.md](PLAN.md) for approval-sized implementation increments.
+
 ## Design Notes
 
 - Do not hide frame conversion questions behind visual styling; document what is actually being compared.
