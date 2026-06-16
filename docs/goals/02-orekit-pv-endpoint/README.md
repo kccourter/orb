@@ -24,6 +24,8 @@ This establishes the Python service as the authoritative propagation side and cr
 4. Add route-level validation and focused tests.
 5. Document local API usage and required Orekit data behavior.
 
+See [PLAN.md](PLAN.md) for approval-sized implementation increments.
+
 ## Design Notes
 
 - Keep API units in kilometers and kilometers per second unless Orekit adapter internals need SI.
