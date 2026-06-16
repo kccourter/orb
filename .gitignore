@@ -1,0 +1,17 @@
+.DS_Store
+.env
+.venv/
+.uv-cache/
+.uv-python/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+node_modules/
+dist/
+apps/web/dist/
+*.tsbuildinfo
+
+orekit-data/

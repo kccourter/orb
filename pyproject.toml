@@ -1,0 +1,40 @@
+[project]
+name = "orb-lab"
+version = "0.1.0"
+description = "Orbit propagation and custom visualization experiments."
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "fastapi>=0.115",
+    "numpy>=2.2",
+    "orekit-jpype[jdk4py]>=13.1.5.0",
+    "pydantic>=2.11",
+    "uvicorn[standard]>=0.34",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.12",
+]
+
+[project.scripts]
+orb-api = "orb_lab.api:main"
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = [".uv-cache", ".uv-python"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
