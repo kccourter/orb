@@ -1,5 +1,6 @@
 import type { TleInput } from "../orbits/tle";
 import type { OrbitSettings } from "../state/orbitSettings";
+import type { PropagationFrameRequest } from "../state/frameSettings";
 import { ORB_API_BASE_URL } from "../config";
 
 export type PropagationApiRequest = {
@@ -13,7 +14,7 @@ export type PropagationApiRequest = {
     duration_minutes: number;
     step_seconds: number;
   };
-  frame: "native";
+  frame: PropagationFrameRequest;
 };
 
 type PropagationApiVector = [number, number, number];
@@ -28,6 +29,9 @@ type PropagationApiResponse = {
     name: string;
     authority: "orekit";
     is_native: boolean;
+    requested?: PropagationFrameRequest | null;
+    source?: string | null;
+    origin?: "geocentric" | "spacecraft" | null;
   };
   units: {
     position: "km";
@@ -80,6 +84,9 @@ export type NormalizedPropagationResponse = {
     name: string;
     authority: "orekit";
     isNative: boolean;
+    requested?: PropagationFrameRequest;
+    source?: string;
+    origin: "geocentric" | "spacecraft";
   };
   units: {
     position: "km";
@@ -109,6 +116,7 @@ export type PropagationFetchResult =
 export function buildTlePropagationRequest(
   tle: TleInput,
   settings: OrbitSettings,
+  frame: PropagationFrameRequest = "native",
 ): PropagationApiRequest {
   return {
     tle: {
@@ -121,7 +129,7 @@ export function buildTlePropagationRequest(
       duration_minutes: settings.durationMinutes,
       step_seconds: settings.stepSeconds,
     },
-    frame: "native",
+    frame,
   };
 }
 
@@ -211,6 +219,9 @@ function normalizePropagationResponse(
       name: response.frame.name,
       authority: response.frame.authority,
       isNative: response.frame.is_native,
+      requested: response.frame.requested ?? undefined,
+      source: response.frame.source ?? undefined,
+      origin: response.frame.origin ?? "geocentric",
     },
     units: response.units,
     sampling: {

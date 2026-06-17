@@ -386,6 +386,9 @@ export type FrameOption = {
 - This increment may not render transformed traces correctly until Increment 4.
 - The key deliverable is correct selected-frame request wiring and stale-state behavior.
 - The UI should make the selected frame visible without turning the app into a settings dashboard.
+- Implemented during Increment 3: added frontend frame settings, a compact frame selector, selected-frame request wiring, stale Orekit comparison clearing on frame changes, and smoke coverage for default and selected-frame refresh behavior.
+- The selector defaults to `native`; changing the selector clears the Orekit trace, alignment, divergence metrics, and status until the user refreshes Orekit again.
+- Non-`TEME` selected-frame responses currently follow the existing frame-mismatch path; selected-frame rendering semantics remain for Increment 4.
 
 ### Validation
 
@@ -393,6 +396,7 @@ export type FrameOption = {
 - `CI=true pnpm --dir apps/web build`
 - `CI=true pnpm --dir apps/web smoke`
 - Manual browser check for selector layout at desktop and narrow widths.
+- Verified during Increment 3 with `CI=true pnpm --dir apps/web check`, `CI=true pnpm --dir apps/web build`, and `CI=true pnpm --dir apps/web smoke`.
 
 ### Approval Question
 

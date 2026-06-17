@@ -30,7 +30,13 @@ import {
   toTlePropagationSettings,
   type OrbitSettings,
 } from "./state/orbitSettings";
+import {
+  DEFAULT_PROPAGATION_FRAME,
+  labelForPropagationFrame,
+  type PropagationFrameRequest,
+} from "./state/frameSettings";
 import { createOrbitControls } from "./ui/controls";
+import { createFrameControls } from "./ui/frameControls";
 import { createOrekitOverlayControls } from "./ui/orekitOverlayControls";
 import "./styles.css";
 
@@ -42,11 +48,17 @@ if (!canvas) {
 
 const orbitScene = createOrbitScene(canvas);
 const controls = createOrbitControls(DEFAULT_ORBIT_SETTINGS, updateOrbit);
+const frameControls = createFrameControls(
+  DEFAULT_PROPAGATION_FRAME,
+  updatePropagationFrame,
+);
 const orekitControls = createOrekitOverlayControls(refreshOrekitSamples);
 document.body.append(controls.element);
+document.body.append(frameControls.element);
 document.body.append(orekitControls.element);
 
 let currentSettings = normalizeOrbitSettings(DEFAULT_ORBIT_SETTINGS);
+let currentFrame: PropagationFrameRequest = DEFAULT_PROPAGATION_FRAME;
 let localSamples: TleOrbitSample[] = [];
 let orekitSamples: OrekitOrbitSample[] = [];
 let sampleAlignment: SampleAlignment | null = null;
@@ -58,16 +70,14 @@ let frame = 0;
 function updateOrbit(settings: OrbitSettings) {
   currentSettings = normalizeOrbitSettings(settings);
   points = recomputeOrbit(currentSettings);
-  orekitSamples = [];
-  sampleAlignment = null;
-  divergenceSeries = null;
-  orbitScene.clearTrace("orekit");
-  orekitControls.setStatus({
-    status: "idle",
-    message: "Refresh Orekit",
-  });
-  orekitControls.setDivergenceSummary(null);
+  clearOrekitComparison("Refresh Orekit");
   frame = 0;
+}
+
+function updatePropagationFrame(nextFrame: PropagationFrameRequest) {
+  currentFrame = nextFrame;
+  frameControls.setFrame(currentFrame);
+  clearOrekitComparison(`Refresh ${labelForPropagationFrame(currentFrame)}`);
 }
 
 function recomputeOrbit(settings: OrbitSettings) {
@@ -95,7 +105,7 @@ async function refreshOrekitSamples() {
   orekitControls.setStatus({ status: "loading" });
 
   const result = await fetchTlePropagation(
-    buildTlePropagationRequest(ISS_TLE, currentSettings),
+    buildTlePropagationRequest(ISS_TLE, currentSettings, currentFrame),
   );
 
   if (requestId !== orekitRequestId) {
@@ -142,6 +152,19 @@ async function refreshOrekitSamples() {
     frame: result.response.frame.name,
   });
   updateDivergenceReadout(localSamples[frame]?.epoch);
+}
+
+function clearOrekitComparison(message: string) {
+  orekitRequestId += 1;
+  orekitSamples = [];
+  sampleAlignment = null;
+  divergenceSeries = null;
+  orbitScene.clearTrace("orekit");
+  orekitControls.setStatus({
+    status: "idle",
+    message,
+  });
+  orekitControls.setDivergenceSummary(null);
 }
 
 function resize() {
