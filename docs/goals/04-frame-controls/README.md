@@ -37,6 +37,15 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Goal 02 frame-aware API responses.
 - Goal 03 dual-trace rendering.
 
+## Goal 03 Handoff Notes
+
+- Goal 03 compares native `TEME` samples only; do not treat that as a generic ECI view without an explicit naming decision.
+- Comparable frontend samples carry source, epoch, frame, position units, velocity units, position, and velocity metadata.
+- Scene trace operations support named traces through `setTracePoints(traceId, points)` and `clearTrace(traceId)`.
+- Current trace IDs are `satellite-js` and `orekit`.
+- Alignment and divergence are epoch-based; frame controls should keep trace geometry, marker position, and divergence readout on the same selected-frame sample set.
+- Frame transforms remain out of Goal 03 and should be documented before Goal 04 runtime changes.
+
 ## Risks
 
 - ECI and TEME naming can be muddled if the first TLE path is not explicit.
