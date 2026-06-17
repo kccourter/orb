@@ -18,3 +18,4 @@ apps/web/test-results/
 *.tsbuildinfo
 
 orekit-data/
+orekit-data.zip

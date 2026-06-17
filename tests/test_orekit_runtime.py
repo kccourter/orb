@@ -9,8 +9,11 @@ from orb_lab import orekit_runtime
 
 
 @pytest.fixture(autouse=True)
-def reset_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
+def reset_runtime(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.delenv("JAVA_HOME", raising=False)
+    monkeypatch.delenv("OREKIT_DATA_PATH", raising=False)
+    orekit_runtime.reset_runtime_for_tests()
+    yield
     orekit_runtime.reset_runtime_for_tests()
 
 
@@ -55,6 +58,50 @@ def test_ensure_orekit_records_existing_data_path(
     status = orekit_runtime.ensure_orekit()
 
     assert status.data_path == tmp_path
+
+
+def test_ensure_orekit_data_requires_data_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(
+        sys.modules,
+        "jdk4py",
+        SimpleNamespace(JAVA_HOME="/tmp/fake-jdk", JAVA_VERSION="24.0.1"),
+    )
+    monkeypatch.setitem(sys.modules, "orekit_jpype", SimpleNamespace(initVM=lambda **_: None))
+
+    with pytest.raises(orekit_runtime.OrekitRuntimeError, match="OREKIT_DATA_PATH"):
+        orekit_runtime.ensure_orekit_data()
+
+
+def test_ensure_orekit_data_loads_existing_data_path_once(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    calls: list[tuple[str, bool]] = []
+
+    def setup_orekit_data(*, filenames: str, from_pip_library: bool) -> None:
+        calls.append((filenames, from_pip_library))
+
+    monkeypatch.setenv("OREKIT_DATA_PATH", str(tmp_path))
+    monkeypatch.setitem(
+        sys.modules,
+        "jdk4py",
+        SimpleNamespace(JAVA_HOME="/tmp/fake-jdk", JAVA_VERSION="24.0.1"),
+    )
+    monkeypatch.setitem(sys.modules, "orekit_jpype", SimpleNamespace(initVM=lambda **_: None))
+    monkeypatch.setitem(
+        sys.modules,
+        "orekit_jpype.pyhelpers",
+        SimpleNamespace(setup_orekit_data=setup_orekit_data),
+    )
+
+    first = orekit_runtime.ensure_orekit_data()
+    second = orekit_runtime.ensure_orekit_data()
+
+    assert first == tmp_path
+    assert second == tmp_path
+    assert calls == [(str(tmp_path), False)]
 
 
 def test_ensure_orekit_rejects_missing_data_path(

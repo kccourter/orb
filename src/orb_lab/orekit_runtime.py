@@ -20,6 +20,7 @@ class OrekitRuntimeStatus:
 
 
 _STATUS: OrekitRuntimeStatus | None = None
+_DATA_LOADED_PATH: Path | None = None
 
 
 def ensure_orekit() -> OrekitRuntimeStatus:
@@ -62,8 +63,39 @@ def ensure_orekit() -> OrekitRuntimeStatus:
 
 def reset_runtime_for_tests() -> None:
     """Clear cached runtime metadata without attempting to stop the JVM."""
-    global _STATUS
+    global _DATA_LOADED_PATH, _STATUS
     _STATUS = None
+    _DATA_LOADED_PATH = None
+
+
+def ensure_orekit_data() -> Path:
+    """Load Orekit data providers from OREKIT_DATA_PATH."""
+    global _DATA_LOADED_PATH
+
+    status = ensure_orekit()
+    data_path = status.data_path
+
+    if data_path is None:
+        msg = "OREKIT_DATA_PATH is required for Orekit TLE propagation."
+        raise OrekitRuntimeError(msg)
+
+    if _DATA_LOADED_PATH == data_path:
+        return data_path
+
+    try:
+        from orekit_jpype.pyhelpers import setup_orekit_data
+    except Exception as exc:  # pragma: no cover - depends on local packaging failure
+        msg = "Orekit data helper is not importable."
+        raise OrekitRuntimeError(msg) from exc
+
+    try:
+        setup_orekit_data(filenames=str(data_path), from_pip_library=False)
+    except Exception as exc:  # pragma: no cover - covered by monkeypatched tests
+        msg = f"Failed to load Orekit data from {data_path}."
+        raise OrekitRuntimeError(msg) from exc
+
+    _DATA_LOADED_PATH = data_path
+    return data_path
 
 
 def _resolve_orekit_data_path() -> Path | None:

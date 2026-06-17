@@ -311,7 +311,8 @@ Implement the first real Orekit propagation path for a supplied TLE and sampling
 
 ### Increment Completion Notes
 
-- Record the actual Orekit frame label found during implementation.
+- Verified during Increment 3: Orekit TLE propagation requires Orekit data for UTC/leap-second history, so live propagation needs `OREKIT_DATA_PATH`.
+- Verified during Increment 3: Orekit's native TLE propagator frame label for the ISS fixture is `TEME`.
 - Add a small numerical sanity range to tests, such as ISS position magnitude near low-Earth-orbit scale, without pinning brittle exact values before the frame policy is final.
 
 ### Validation
