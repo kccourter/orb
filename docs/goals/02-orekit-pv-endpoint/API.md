@@ -40,6 +40,8 @@ The local `orekit-data.zip` and `orekit-data/` paths are ignored by git.
 
 `frame` currently accepts only `native`. For Orekit TLE propagation, the native frame returned for the ISS fixture is `TEME`.
 
+Goal 04 plans to extend this field to exact frame identifiers such as `TEME`, `EME2000`, `ITRF`, and `QSW`; see [Goal 04 FRAMES.md](../04-frame-controls/FRAMES.md). Until that increment is implemented, those values are documentation-only and still fail request validation.
+
 ## Response
 
 ```json

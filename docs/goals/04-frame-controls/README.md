@@ -34,6 +34,8 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Prefer `EME2000` for the first explicit inertial option, `ITRF` for the first Earth-fixed option, and a documented local orbital convention such as `QSW` for the first local option unless Increment 1 revises those names.
 - Keep `native`/`TEME` compatibility explicit so Goal 03 comparison behavior remains understandable.
 
+See [FRAMES.md](FRAMES.md) for the accepted Goal 04 frame vocabulary, UI labels, local QSW convention, and comparison policy.
+
 ## Dependencies
 
 - Goal 02 frame-aware API responses.

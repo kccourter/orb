@@ -168,11 +168,15 @@ Decide and document exact frame names, transform ownership, and the first local 
 - This increment should not change runtime behavior.
 - A clear `FRAMES.md` is the main deliverable.
 - Any unresolved frame decision should remain in an open-decision section before Increment 2 starts.
+- Implemented during Increment 1: added `FRAMES.md`, linked it from the Goal 04 README, and added a Goal 02 API note that the broader frame enum is planned but not yet runtime-supported.
+- Accepted frame policy: `native` remains the default compatibility request; explicit Goal 04 frame values are `TEME`, `EME2000`, `ITRF`, and `QSW`.
+- Accepted comparison policy: only realized `TEME` is comparison-safe with current local `satellite.js` samples; transformed frames are Orekit display frames until a matching local transform exists.
 
 ### Validation
 
 - Documentation review.
 - No runtime validation required for this planning increment.
+- Documentation-only validation completed during Increment 1.
 
 ### Approval Question
 
