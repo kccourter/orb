@@ -279,12 +279,19 @@ The exact names can change, but route handlers should stay thin.
 - Frontend code may still request only `native` after this increment.
 - The API contract should be ready for frontend frame selector work.
 - Keep any unsupported local-frame behavior explicit rather than silently approximated.
+- Implemented during Increment 2: request models now accept `native`, `TEME`, `EME2000`, `ITRF`, and `QSW`; frame metadata includes requested frame, source frame, and origin; propagation transforms explicit geocentric frames through Orekit and returns spacecraft-centered QSW samples.
+- `src/orb_lab/frames.py` owns frame resolution and PV coordinate transforms so FastAPI route handlers stay thin.
+- `native` remains backward-compatible and returns the TLE propagator frame, `TEME` for the ISS fixture.
+- Unsupported broad names such as `ECI` still fail schema validation with `422`.
 
 ### Validation
 
 - `uv run pytest`
 - `uv run ruff check .`
 - Manual API request for each supported frame when `OREKIT_DATA_PATH` is available.
+- Verified during Increment 2 with `uv run pytest`, `uv run ruff check .`, and `UV_CACHE_DIR=/Users/kcourter/dev/orb/.uv-cache OREKIT_DATA_PATH=/Users/kcourter/dev/orb/orekit-data.zip uv run pytest tests/test_tle_propagation.py`.
+- Data-enabled full validation also passed with `UV_CACHE_DIR=/Users/kcourter/dev/orb/.uv-cache OREKIT_DATA_PATH=/Users/kcourter/dev/orb/orekit-data.zip uv run pytest`: 34 passed.
+- A local FastAPI `TestClient` smoke returned HTTP `200` for `native`, `TEME`, `EME2000`, `ITRF`, and `QSW`; the process was interrupted after output because JPype can linger after JVM startup.
 
 ### Approval Question
 

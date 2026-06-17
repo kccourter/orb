@@ -3,6 +3,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from math import floor, isfinite
 
+from orb_lab.frames import (
+    FrameResolutionError,
+    ResolvedFrame,
+    resolve_output_frame,
+    transform_pv_coordinates,
+)
 from orb_lab.models import (
     FrameMetadata,
     PropagationSample,
@@ -22,10 +28,6 @@ class TlePropagationError(RuntimeError):
 
 def propagate_tle(request: TlePropagationRequest) -> TlePropagationResponse:
     """Propagate a TLE request with Orekit and return sampled PV vectors."""
-    if request.frame != "native":
-        msg = f"Unsupported propagation frame: {request.frame}"
-        raise TlePropagationError(msg)
-
     try:
         ensure_orekit_data()
     except OrekitRuntimeError:
@@ -48,7 +50,8 @@ def propagate_tle(request: TlePropagationRequest) -> TlePropagationResponse:
     start_epoch = request.sampling.start_epoch.astimezone(UTC)
     duration_seconds = request.sampling.duration_minutes * 60.0
     sample_count = floor(duration_seconds / request.sampling.step_seconds) + 1
-    frame_name = str(propagator.getFrame().getName())
+    source_frame = propagator.getFrame()
+    target_frame = _resolve_frame(request, source_frame)
     samples: list[PropagationSample] = []
 
     for index in range(sample_count):
@@ -60,7 +63,12 @@ def propagate_tle(request: TlePropagationRequest) -> TlePropagationResponse:
 
         try:
             state = propagator.propagate(absolute_date)
-            pv_coordinates = state.getPVCoordinates()
+            pv_coordinates = transform_pv_coordinates(
+                state.getPVCoordinates(),
+                source_frame,
+                target_frame,
+                absolute_date,
+            )
         except Exception as exc:
             msg = f"Orekit propagation failed at sample {index}."
             raise TlePropagationError(msg) from exc
@@ -80,7 +88,13 @@ def propagate_tle(request: TlePropagationRequest) -> TlePropagationResponse:
 
     return TlePropagationResponse(
         source=SourceMetadata(name=request.tle.name),
-        frame=FrameMetadata(name=frame_name),
+        frame=FrameMetadata(
+            name=target_frame.name,
+            is_native=target_frame.is_native,
+            requested=target_frame.requested,
+            source=target_frame.source,
+            origin=target_frame.origin,
+        ),
         sampling=SamplingMetadata(
             start_epoch=start_epoch,
             duration_minutes=request.sampling.duration_minutes,
@@ -89,6 +103,13 @@ def propagate_tle(request: TlePropagationRequest) -> TlePropagationResponse:
         ),
         samples=samples,
     )
+
+
+def _resolve_frame(request: TlePropagationRequest, source_frame: object) -> ResolvedFrame:
+    try:
+        return resolve_output_frame(request.frame, source_frame)
+    except FrameResolutionError as exc:
+        raise TlePropagationError(str(exc)) from exc
 
 
 def _sample_epoch(start_epoch: datetime, offset_seconds: int) -> datetime:

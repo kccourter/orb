@@ -6,6 +6,8 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 Vector3 = tuple[float, float, float]
+PropagationFrameRequest = Literal["native", "TEME", "EME2000", "ITRF", "QSW"]
+FrameOrigin = Literal["geocentric", "spacecraft"]
 
 
 class TleInput(BaseModel):
@@ -49,7 +51,7 @@ class SamplingRequest(BaseModel):
 class TlePropagationRequest(BaseModel):
     tle: TleInput
     sampling: SamplingRequest
-    frame: Literal["native"] = "native"
+    frame: PropagationFrameRequest = "native"
 
 
 class SourceMetadata(BaseModel):
@@ -62,6 +64,9 @@ class FrameMetadata(BaseModel):
     name: str
     authority: str = "orekit"
     is_native: bool = True
+    requested: PropagationFrameRequest | None = None
+    source: str | None = None
+    origin: FrameOrigin = "geocentric"
 
 
 class UnitsMetadata(BaseModel):
