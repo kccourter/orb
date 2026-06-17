@@ -12,7 +12,11 @@ from orb_lab.models import (
     DemoStateVector,
     ErrorResponse,
     TlePropagationRequest,
+    TlePropagationResponse,
 )
+from orb_lab.orekit_runtime import OrekitRuntimeError
+from orb_lab.propagation import TlePropagationError
+from orb_lab.propagation import propagate_tle as run_tle_propagation
 
 app = FastAPI(title="Orb Lab API")
 
@@ -48,23 +52,43 @@ def propagate_demo(
 
 @app.post(
     "/propagate/tle",
-    status_code=status.HTTP_501_NOT_IMPLEMENTED,
+    response_model=TlePropagationResponse,
     responses={
-        status.HTTP_501_NOT_IMPLEMENTED: {
+        status.HTTP_400_BAD_REQUEST: {
             "model": ErrorResponse,
-            "description": "Orekit TLE propagation is planned but not yet implemented.",
+            "description": "The TLE payload is syntactically valid JSON but cannot be propagated.",
+        },
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": ErrorResponse,
+            "description": "Orekit runtime or required data is unavailable.",
         }
     },
 )
-def propagate_tle(request: TlePropagationRequest) -> JSONResponse:
-    """Validate the Goal 02 TLE propagation contract before Orekit is wired in."""
-    _ = request
+def propagate_tle(request: TlePropagationRequest) -> TlePropagationResponse | JSONResponse:
+    """Propagate a TLE request with Orekit and map operational errors to HTTP."""
+    try:
+        return run_tle_propagation(request)
+    except OrekitRuntimeError as exc:
+        return _error_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="orekit_unavailable",
+            message=str(exc),
+        )
+    except TlePropagationError as exc:
+        return _error_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="tle_propagation_failed",
+            message=str(exc),
+        )
+
+
+def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        status_code=status_code,
         content={
             "error": {
-                "code": "orekit_propagation_not_implemented",
-                "message": "Orekit TLE propagation is not implemented yet.",
+                "code": code,
+                "message": message,
             }
         },
     )

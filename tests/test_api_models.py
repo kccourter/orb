@@ -84,21 +84,7 @@ def test_tle_propagation_request_rejects_naive_epoch() -> None:
         TlePropagationRequest.model_validate(payload)
 
 
-def test_propagate_tle_route_validates_contract_then_returns_501() -> None:
-    client = TestClient(app)
-
-    response = client.post("/propagate/tle", json=ISS_TLE_PAYLOAD)
-
-    assert response.status_code == 501
-    assert response.json() == {
-        "error": {
-            "code": "orekit_propagation_not_implemented",
-            "message": "Orekit TLE propagation is not implemented yet.",
-        }
-    }
-
-
-def test_propagate_tle_route_rejects_invalid_payload_before_stub() -> None:
+def test_propagate_tle_route_rejects_invalid_payload_before_adapter() -> None:
     client = TestClient(app)
     payload = ISS_TLE_PAYLOAD | {"frame": "EME2000"}
 

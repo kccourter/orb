@@ -393,6 +393,9 @@ Use the same request shown in the Draft API Shape section. The smoke passes when
 ### Increment Completion Notes
 
 - If `/orekit/healthz` is added, keep its purpose separate from `GET /healthz`: it may initialize Orekit and report runtime readiness.
+- Verified during Increment 4: `POST /propagate/tle` is wired to the Orekit adapter; adapter domain failures map to `400`, and Orekit runtime/data failures map to `503`.
+- Verified during Increment 4: a data-enabled FastAPI `TestClient` smoke returned `200`, frame `TEME`, sample count `186`, and first epoch `2024-06-21T13:31:24Z`.
+- Data-enabled API smoke is not kept as an automated pytest case because the JVM plus `TestClient` can linger after successful output; live Orekit coverage remains at the adapter test layer.
 - Do not add frontend API calls in this increment.
 
 ### Validation
