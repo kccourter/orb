@@ -313,6 +313,8 @@ type SampleAlignment = {
 - Keep alignment deterministic and side-effect free.
 - Do not interpolate in Goal 03.
 - Record any actual Goal 01/Goal 02 sample-count mismatch observed during manual checks.
+- Implemented during Increment 2: shared comparable sample types, `satellite.js` and Orekit adapters, deterministic epoch alignment, frame/unit precondition checks, and compile-time fixture assertions.
+- Alignment is computed after a successful Orekit refresh and stored for later increments; Goal 03 does not render the Orekit trace or display divergence metrics yet.
 
 ### Validation
 

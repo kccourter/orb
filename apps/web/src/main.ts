@@ -4,6 +4,14 @@ import {
   type OrekitOrbitSample,
 } from "./api/propagation";
 import { ISS_TLE } from "./orbits/fixtures";
+import {
+  alignOrbitSamples,
+  type SampleAlignment,
+} from "./orbits/alignment";
+import {
+  orekitSampleToComparable,
+  satelliteJsSampleToComparable,
+} from "./orbits/sampleTypes";
 import { sampleTleOrbit, type TleOrbitSample } from "./orbits/tle";
 import { createOrbitScene } from "./scene/createScene";
 import { orbitSamplesToScenePoints } from "./scene/orbitTrace";
@@ -32,6 +40,7 @@ document.body.append(orekitControls.element);
 let currentSettings = normalizeOrbitSettings(DEFAULT_ORBIT_SETTINGS);
 let localSamples: TleOrbitSample[] = [];
 let orekitSamples: OrekitOrbitSample[] = [];
+let sampleAlignment: SampleAlignment | null = null;
 let orekitRequestId = 0;
 let points = recomputeOrbit(currentSettings);
 let frame = 0;
@@ -40,6 +49,7 @@ function updateOrbit(settings: OrbitSettings) {
   currentSettings = normalizeOrbitSettings(settings);
   points = recomputeOrbit(currentSettings);
   orekitSamples = [];
+  sampleAlignment = null;
   orekitControls.setStatus({
     status: "idle",
     message: "Refresh Orekit",
@@ -88,6 +98,21 @@ async function refreshOrekitSamples() {
   }
 
   orekitSamples = result.response.samples;
+  const alignmentResult = alignOrbitSamples(
+    localSamples.map(satelliteJsSampleToComparable),
+    orekitSamples.map(orekitSampleToComparable),
+  );
+
+  if (!alignmentResult.ok) {
+    sampleAlignment = null;
+    orekitControls.setStatus({
+      status: "error",
+      message: alignmentResult.error.message,
+    });
+    return;
+  }
+
+  sampleAlignment = alignmentResult.alignment;
   orekitControls.setStatus({
     status: "ready",
     sampleCount: orekitSamples.length,
