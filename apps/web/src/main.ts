@@ -14,7 +14,10 @@ import {
 } from "./orbits/sampleTypes";
 import { sampleTleOrbit, type TleOrbitSample } from "./orbits/tle";
 import { createOrbitScene } from "./scene/createScene";
-import { orbitSamplesToScenePoints } from "./scene/orbitTrace";
+import {
+  comparableSamplesToScenePoints,
+  orbitSamplesToScenePoints,
+} from "./scene/orbitTrace";
 import {
   DEFAULT_ORBIT_SETTINGS,
   normalizeOrbitSettings,
@@ -50,6 +53,7 @@ function updateOrbit(settings: OrbitSettings) {
   points = recomputeOrbit(currentSettings);
   orekitSamples = [];
   sampleAlignment = null;
+  orbitScene.clearTrace("orekit");
   orekitControls.setStatus({
     status: "idle",
     message: "Refresh Orekit",
@@ -113,6 +117,12 @@ async function refreshOrekitSamples() {
   }
 
   sampleAlignment = alignmentResult.alignment;
+  orbitScene.setTracePoints(
+    "orekit",
+    comparableSamplesToScenePoints(
+      sampleAlignment.pairs.map((pair) => pair.remote),
+    ),
+  );
   orekitControls.setStatus({
     status: "ready",
     sampleCount: orekitSamples.length,

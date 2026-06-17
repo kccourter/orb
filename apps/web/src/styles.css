@@ -142,6 +142,7 @@ body {
 }
 
 .orekit-overlay__status {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   color: rgb(232 241 245 / 78%);
@@ -149,6 +150,32 @@ body {
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.orekit-overlay__legend {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  align-items: center;
+  color: rgb(232 241 245 / 72%);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.orekit-overlay__legend::before,
+.orekit-overlay__legend::after {
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+  content: "";
+}
+
+.orekit-overlay__legend::before {
+  background: #ffd166;
+}
+
+.orekit-overlay__legend::after {
+  background: #4ecdc4;
 }
 
 .orekit-overlay[data-status="error"] .orekit-overlay__status {
@@ -177,6 +204,10 @@ body {
   .orekit-overlay {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .orekit-overlay__legend {
+    align-self: flex-start;
   }
 
   .orekit-overlay__status {

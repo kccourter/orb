@@ -26,7 +26,12 @@ export function createOrekitOverlayControls(
   statusText.className = "orekit-overlay__status";
   statusText.dataset.testid = "orekit-status";
 
-  element.append(refreshButton, statusText);
+  const legend = document.createElement("span");
+  legend.className = "orekit-overlay__legend";
+  legend.dataset.testid = "orekit-legend";
+  legend.textContent = "Local / Orekit";
+
+  element.append(refreshButton, statusText, legend);
 
   refreshButton.addEventListener("click", () => {
     onRefresh();

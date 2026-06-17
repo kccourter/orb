@@ -61,13 +61,18 @@ test("requests Orekit samples from the manual refresh control", async ({ page })
           start_epoch: "2024-06-21T13:31:24Z",
           duration_minutes: 92.5,
           step_seconds: 30,
-          sample_count: 1,
+          sample_count: 2,
         },
         samples: [
           {
             epoch: "2024-06-21T13:31:24Z",
             position_km: [1, 2, 3],
             velocity_km_s: [4, 5, 6],
+          },
+          {
+            epoch: "2024-06-21T13:31:54Z",
+            position_km: [2, 3, 4],
+            velocity_km_s: [5, 6, 7],
           },
         ],
       },
@@ -77,9 +82,10 @@ test("requests Orekit samples from the manual refresh control", async ({ page })
   await page.goto("/");
 
   await expect(page.getByTestId("orekit-status")).toHaveText("Orekit idle");
+  await expect(page.getByTestId("orekit-legend")).toHaveText("Local / Orekit");
   await page.getByTestId("refresh-orekit").click();
   await expect(page.getByTestId("orekit-status")).toHaveText(
-    "Orekit TEME: 1 samples",
+    "Orekit TEME: 2 samples",
   );
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });

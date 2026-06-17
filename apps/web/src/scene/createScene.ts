@@ -7,14 +7,22 @@ export const SCENE_CONSTANTS = {
   earthColor: 0x2f86d6,
   earthRadiusUnits: 6.371,
   earthRotationStepRadians: 0.0008,
+  orekitTraceColor: 0x4ecdc4,
   orbitTraceColor: 0xffd166,
   satelliteColor: 0xfafafa,
   satelliteEmissiveColor: 0x284b63,
   satelliteRadiusUnits: 0.12,
 } as const;
 
+export type OrbitTraceId = "satellite-js" | "orekit";
+
 export type OrbitScene = {
   setOrbitPoints: (points: readonly THREE.Vector3[]) => void;
+  setTracePoints: (
+    traceId: OrbitTraceId,
+    points: readonly THREE.Vector3[],
+  ) => void;
+  clearTrace: (traceId: OrbitTraceId) => void;
   setSatellitePosition: (point: THREE.Vector3) => void;
   rotateEarth: () => void;
   resize: (width: number, height: number) => void;
@@ -49,11 +57,11 @@ export function createOrbitScene(canvas: HTMLCanvasElement): OrbitScene {
   );
   scene.add(earth);
 
-  const orbitTrace: OrbitTrace = new THREE.Line(
-    new THREE.BufferGeometry(),
-    new THREE.LineBasicMaterial({ color: SCENE_CONSTANTS.orbitTraceColor }),
-  );
-  scene.add(orbitTrace);
+  const traces: Record<OrbitTraceId, OrbitTrace> = {
+    "satellite-js": createTrace(SCENE_CONSTANTS.orbitTraceColor),
+    orekit: createTrace(SCENE_CONSTANTS.orekitTraceColor),
+  };
+  scene.add(traces["satellite-js"], traces.orekit);
 
   const satelliteMarker = new THREE.Mesh(
     new THREE.SphereGeometry(SCENE_CONSTANTS.satelliteRadiusUnits, 24, 12),
@@ -66,7 +74,13 @@ export function createOrbitScene(canvas: HTMLCanvasElement): OrbitScene {
 
   return {
     setOrbitPoints(points) {
-      updateOrbitTrace(orbitTrace, points);
+      updateOrbitTrace(traces["satellite-js"], points);
+    },
+    setTracePoints(traceId, points) {
+      updateOrbitTrace(traces[traceId], points);
+    },
+    clearTrace(traceId) {
+      updateOrbitTrace(traces[traceId], []);
     },
     setSatellitePosition(point) {
       satelliteMarker.position.copy(point);
@@ -84,12 +98,21 @@ export function createOrbitScene(canvas: HTMLCanvasElement): OrbitScene {
     },
     dispose() {
       earth.geometry.dispose();
-      orbitTrace.geometry.dispose();
       satelliteMarker.geometry.dispose();
+      for (const trace of Object.values(traces)) {
+        trace.geometry.dispose();
+        trace.material.dispose();
+      }
       earth.material.dispose();
-      orbitTrace.material.dispose();
       satelliteMarker.material.dispose();
       renderer.dispose();
     },
   };
+}
+
+function createTrace(color: number): OrbitTrace {
+  return new THREE.Line(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color }),
+  );
 }

@@ -414,6 +414,9 @@ If that creates too much churn, a narrower `setOrekitOrbitPoints`/`clearOrekitOr
 
 - Verify the scene at desktop and narrow widths.
 - Keep the rendering layer source-agnostic enough for Goal 04 frame controls.
+- Implemented during Increment 3: named trace scene API, generic scene-point conversion for comparable samples, distinct Orekit trace material, compact local/Orekit legend, and Orekit trace rendering after successful alignment.
+- API error states keep the previous local scene usable; settings changes clear stale Orekit trace data.
+- Verified during Increment 3: Playwright smoke intercepts Orekit samples, refreshes the overlay, and confirms the canvas remains nonblank.
 
 ### Validation
 
