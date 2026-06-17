@@ -117,6 +117,58 @@ Decide and document exact frame names, transform ownership, and the first local 
 - Transform ownership is explicit: Orekit owns authoritative frame transforms.
 - Goal 04 implementation can proceed without using bare `ECI` as an API frame value.
 
+### Implementation Plan
+
+1. Create the frame policy document.
+   - Add `docs/goals/04-frame-controls/FRAMES.md`.
+   - Define every approved API frame value, UI label, Orekit source, output semantics, and comparison safety.
+   - Include a short glossary explaining why `ECI` and `ECEF` are UI categories, not precise API values.
+
+2. Lock the initial frame set.
+   - Confirm `native`, `TEME`, `EME2000`, `ITRF`, and `QSW`, or replace any of them with a better Orekit-supported name.
+   - State which frame is the default selected frontend value.
+   - State whether `native` remains visible to users or only exists for API compatibility.
+
+3. Define local-frame semantics.
+   - Write the `QSW` axis definitions.
+   - Decide whether local-frame samples are object-relative coordinates, a rendered axes overlay, or both.
+   - State how local-frame samples should be represented in response metadata.
+
+4. Decide comparison behavior.
+   - Document when divergence metrics are allowed.
+   - Decide whether non-`TEME` comparisons require transformed `satellite.js` samples, Orekit-only display, or hidden metrics.
+   - Keep interpolation out of scope unless explicitly added later.
+
+5. Update high-level docs.
+   - Link `FRAMES.md` from the Goal 04 README.
+   - Add a short note to the Goal 02 API docs if the planned request frame enum changes the public contract.
+
+### Planned Frame Table
+
+`FRAMES.md` should include a table with at least:
+
+- API value
+- UI label
+- Category
+- Orekit frame or construction path
+- Output origin
+- Output units
+- Whether it is comparison-safe with local `satellite.js` samples
+- Notes and known caveats
+
+### Edge Cases
+
+- `TEME` may be available both as native TLE output and as an explicit request.
+- `ITRF` may need Earth orientation data from Orekit data files.
+- `QSW` can be nonsensical if position or angular momentum vectors are degenerate.
+- A local orbital frame centered on the spacecraft cannot be rendered as a normal geocentric orbit trace without an explicit design choice.
+
+### Increment Completion Notes
+
+- This increment should not change runtime behavior.
+- A clear `FRAMES.md` is the main deliverable.
+- Any unresolved frame decision should remain in an open-decision section before Increment 2 starts.
+
 ### Validation
 
 - Documentation review.
@@ -157,6 +209,72 @@ Allow the backend to return TLE samples in requested, documented frames while pr
 - Unsupported frames fail before or during propagation with useful errors.
 - Runtime/data failures still map to `503`; domain/frame propagation failures map to `400` or `422` according to validation ownership.
 - The adapter returns finite kilometer and kilometer-per-second vectors for transformed samples.
+
+### Implementation Plan
+
+1. Extend model types.
+   - Replace `Literal["native"]` with the approved frame enum from Increment 1.
+   - Extend `FrameMetadata` to include requested frame and source/native frame metadata if approved.
+   - Preserve response compatibility for existing fields: `name`, `authority`, and `is_native`.
+
+2. Add frame helpers.
+   - Create `src/orb_lab/frames.py`.
+   - Resolve request values to Orekit frame objects or local orbital frame construction.
+   - Keep imports and Orekit-specific failure handling outside Pydantic models.
+
+3. Transform propagated state.
+   - Continue propagating with Orekit's TLE propagator.
+   - For `native`, return the current behavior.
+   - For explicit inertial and Earth-fixed frames, transform PV coordinates at each sample epoch.
+   - For local frame output, implement only the semantics approved in Increment 1.
+
+4. Preserve error taxonomy.
+   - Keep JVM/data initialization failures as `OrekitRuntimeError` and HTTP `503`.
+   - Raise propagation/frame domain errors as `TlePropagationError`.
+   - Keep schema-level unsupported frame values as `422` if using Pydantic enum validation.
+
+5. Add tests.
+   - Validate accepted frame names.
+   - Validate rejected frame names.
+   - Verify `native` remains `TEME` for the ISS fixture.
+   - Verify at least one transformed frame has metadata and finite vectors.
+   - Add data-enabled tests only where they can skip cleanly without Orekit data.
+
+6. Update API documentation.
+   - Update `docs/goals/02-orekit-pv-endpoint/API.md` to list accepted frame values and metadata semantics.
+   - Note which frames require Orekit data and which are intended for Goal 04 display.
+
+### Planned Backend Shape
+
+```py
+PropagationFrameRequest = Literal["native", "TEME", "EME2000", "ITRF", "QSW"]
+```
+
+`frames.py` should provide narrow helpers, such as:
+
+```py
+def resolve_output_frame(requested: PropagationFrameRequest, native_frame: object) -> ResolvedFrame:
+    ...
+
+def transform_pv_coordinates(pv: object, source_frame: object, target: ResolvedFrame, date: object) -> object:
+    ...
+```
+
+The exact names can change, but route handlers should stay thin.
+
+### Edge Cases
+
+- Orekit frame imports may fail if the JVM/runtime is not initialized correctly.
+- Earth-fixed frames may require data files that native TLE propagation already needed but should still surface cleanly.
+- `native` and explicit `TEME` may produce equivalent vectors but different `is_native` metadata.
+- Local orbital frame transforms may need velocity transformation as well as position transformation.
+- Numerical tests should check broad invariants and metadata instead of brittle full-vector snapshots.
+
+### Increment Completion Notes
+
+- Frontend code may still request only `native` after this increment.
+- The API contract should be ready for frontend frame selector work.
+- Keep any unsupported local-frame behavior explicit rather than silently approximated.
 
 ### Validation
 
@@ -199,6 +317,64 @@ Add compact frame selection UI and wire selected frame into propagation requests
 - Frame changes do not reset epoch/duration/step controls.
 - Stale Orekit traces and divergence metrics are not presented as current after a frame change.
 - The local scene remains usable if the API is offline.
+
+### Implementation Plan
+
+1. Add frame state.
+   - Create `apps/web/src/state/frameSettings.ts`.
+   - Export approved API values, UI labels, default selected frame, and a normalizer.
+   - Keep this separate from `OrbitSettings`.
+
+2. Add frame control UI.
+   - Create `apps/web/src/ui/frameControls.ts`.
+   - Use a compact segmented or select control depending on available width and existing CSS patterns.
+   - Expose one change callback with the selected frame value.
+
+3. Update API request typing.
+   - Update `PropagationApiRequest["frame"]` to the approved frontend type.
+   - Pass selected frame into `buildTlePropagationRequest`.
+   - Update smoke fixtures to assert selected frame is sent.
+
+4. Wire app orchestration.
+   - Store `currentFrame`.
+   - On frame change, clear Orekit trace, alignment, divergence, and status or mark them stale.
+   - Keep local `satellite.js` sampling and marker animation unchanged unless Increment 4 changes display semantics.
+
+5. Update UI copy and layout.
+   - Display selected frame in the controls or overlay.
+   - Keep controls compact on narrow widths.
+   - Avoid explanatory in-app prose beyond necessary labels.
+
+6. Add smoke coverage.
+   - Verify default frame value.
+   - Select another frame.
+   - Click refresh and assert the mocked API receives that frame.
+   - Confirm the canvas remains nonblank.
+
+### Planned Frontend Shape
+
+```ts
+export type PropagationFrameRequest = "native" | "TEME" | "EME2000" | "ITRF" | "QSW";
+
+export type FrameOption = {
+  value: PropagationFrameRequest;
+  label: string;
+};
+```
+
+### Edge Cases
+
+- User changes frame while an Orekit request is in flight.
+- User changes sampling settings after selecting a non-default frame.
+- API rejects a selected frame because backend and frontend enums drift.
+- Narrow viewport cannot fit a full segmented control.
+- Existing stale Orekit data should not appear current after frame changes.
+
+### Increment Completion Notes
+
+- This increment may not render transformed traces correctly until Increment 4.
+- The key deliverable is correct selected-frame request wiring and stale-state behavior.
+- The UI should make the selected frame visible without turning the app into a settings dashboard.
 
 ### Validation
 
@@ -243,6 +419,60 @@ Render traces, marker position, overlay status, and divergence metrics from one 
 - The selected frame is visible in the overlay/readout.
 - Local orbital frame display follows the documented convention from Increment 1.
 
+### Implementation Plan
+
+1. Define render ownership per frame.
+   - For `native`/`TEME`, preserve existing local marker and dual-trace comparison behavior.
+   - For explicit transformed frames, decide whether Orekit becomes the display source for marker and trace.
+   - For non-comparable frames, hide or disable divergence metrics rather than comparing mismatched samples.
+
+2. Adapt sample conversion.
+   - Ensure scene point conversion continues to apply kilometer-to-scene-unit scaling at the scene boundary.
+   - Keep transformed Orekit samples in kilometers.
+   - Avoid mixing local `TEME` samples into `EME2000`, `ITRF`, or `QSW` rendering unless transformed.
+
+3. Update marker behavior.
+   - Use the selected-frame sample sequence for marker animation where appropriate.
+   - Reset marker animation when the displayed frame sample set changes.
+   - Keep no-data states nonblank and understandable.
+
+4. Update divergence behavior.
+   - Compute divergence only when local and remote comparable samples have matching frame and units.
+   - Clear divergence when selected-frame rendering cannot produce a valid comparison.
+   - Make the overlay frame label match the data actually being read.
+
+5. Add optional frame visuals.
+   - For `ITRF`, decide whether Earth rotation should pause or simply show Earth-fixed trace behavior.
+   - For `QSW`, add axes or a local-frame visual only if it follows `FRAMES.md` and stays visually clear.
+
+6. Extend smoke tests.
+   - Mock selected-frame API responses.
+   - Verify trace/status/readout update for at least one transformed frame.
+   - Verify stale metrics clear when switching frames.
+
+### Rendering Policy Candidates
+
+- `native`/`TEME`: show local `satellite.js` trace, Orekit trace, local marker, and divergence.
+- `EME2000`: show Orekit selected-frame trace and marker; hide divergence unless local samples are transformed too.
+- `ITRF`: show Orekit Earth-fixed trace and marker; hide divergence unless local samples are transformed too.
+- `QSW`: show local-frame view according to `FRAMES.md`; likely not a normal geocentric orbit trace.
+
+Increment 4 should implement the policy approved after Increments 1-3, not invent a different display model.
+
+### Edge Cases
+
+- Current animation frame index may exceed the selected-frame sample count.
+- Selected-frame samples may be empty after an API error.
+- Switching frame during animation should not leave marker position from a previous frame.
+- Frame label in response may differ from requested frame for `native`.
+- Local orbital coordinates may be visually tiny or degenerate compared with geocentric scene scale.
+
+### Increment Completion Notes
+
+- This increment should prioritize analytic correctness over always showing two traces.
+- If a frame is display-only in Goal 04, document that in status/readout and the completion record.
+- Keep Three.js scene APIs source-agnostic enough for Goal 05 data scenarios.
+
 ### Validation
 
 - `CI=true pnpm --dir apps/web check`
@@ -283,6 +513,74 @@ Add confidence checks and document remaining frame limitations for Goal 05.
 - Goal 05 can depend on stable frame naming in scenario data.
 - The record captures which frames are supported, which are display-only or comparison-safe, and which risks remain.
 - The docs state when `TEME`, `EME2000`, `ITRF`, and the selected local frame should be used.
+
+### Implementation Plan
+
+1. Strengthen backend checks.
+   - Add tests for frame metadata on all supported request values.
+   - Add numerical invariants for transformed frames, such as finite vectors and expected magnitude preservation where valid.
+   - Add skip-friendly data-enabled checks when Orekit data is unavailable.
+
+2. Strengthen frontend checks.
+   - Add fixture checks if pure frame-state helpers exist.
+   - Extend Playwright smoke to cover selector request wiring and stale-state clearing.
+   - Verify canvas nonblank after selected-frame refreshes.
+
+3. Perform manual visual QA.
+   - Run API and web app together with `OREKIT_DATA_PATH`.
+   - Check default/native frame.
+   - Check explicit inertial frame.
+   - Check Earth-fixed frame.
+   - Check local orbital frame behavior.
+   - Check desktop and narrow viewport layouts.
+
+4. Update docs.
+   - Mark Goal 04 README complete.
+   - Add `docs/goals/04-frame-controls/RECORD.md`.
+   - Link the record from the Goal 04 README.
+   - Update `docs/goals/README.md` only after validation passes.
+   - Add Goal 05 handoff notes for scenario frame metadata.
+
+5. Record limitations.
+   - State which frames support divergence.
+   - State which frames are Orekit-only display modes.
+   - State known data/runtime dependencies.
+   - State remaining local orbital limitations.
+
+### Final Documentation Checklist
+
+- `README.md` for Goal 04 marks the goal complete and links to `RECORD.md`.
+- `FRAMES.md` lists supported frame values, labels, conventions, and caveats.
+- `RECORD.md` lists completed increments, commands run, manual browser checks, and known risks.
+- `docs/goals/README.md` marks Goal 04 complete only after implementation and validation.
+- Goal 05 README or plan notes mention the stable frame names scenario data can use.
+
+### Final Validation Matrix
+
+- API frame request: `native`.
+- API frame request: explicit inertial frame.
+- API frame request: Earth-fixed frame.
+- API frame request: local orbital frame.
+- API rejected unsupported frame.
+- Browser default frame load.
+- Browser frame change before Orekit refresh.
+- Browser Orekit refresh after frame change.
+- Browser sampling settings changed after frame data is loaded.
+- Browser API offline after selecting a non-default frame.
+- Desktop viewport.
+- Narrow viewport.
+
+### Edge Cases
+
+- Orekit data unavailable during manual QA.
+- Playwright server port already occupied by a manual dev server.
+- Frame transforms pass backend tests but look visually confusing due to camera framing.
+- Goal 05 may need scenario metadata not exposed by Goal 04 if the record is incomplete.
+
+### Increment Completion Notes
+
+- This increment closes Goal 04 only after validation and docs agree with implemented behavior.
+- Do not mark Goal 04 complete if any approved frame mode is only partially wired without documentation.
 
 ### Validation
 
