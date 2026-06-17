@@ -70,11 +70,37 @@ Separate Three.js scene setup from orbit data generation.
 
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
-- Manual browser verification at desktop and narrow viewport sizes.
+- `pnpm --dir apps/web smoke`
+- Manual browser verification at desktop and narrow viewport sizes if the in-app browser is available.
+
+### Implementation Plan
+
+1. Add scene constants and unit helpers.
+   - Define Earth radius, orbit-position scale, camera defaults, and common colors in the scene layer.
+   - Keep `satellite.js` samples in kilometers and perform only scene-display scaling at the scene boundary.
+
+2. Add `apps/web/src/scene/createScene.ts`.
+   - Export a `createOrbitScene(canvas)` helper that owns renderer, scene, camera, lights, Earth mesh, orbit trace, satellite marker, resize, render, and dispose handles.
+   - Keep the public return shape small and explicit so `main.ts` can orchestrate data and animation without knowing geometry setup details.
+
+3. Add `apps/web/src/scene/orbitTrace.ts`.
+   - Export helpers to convert typed orbit samples to scene vectors and update trace geometry.
+   - Include marker update behavior in the scene API or adjacent trace helper so later Orekit overlay work can add a second trace without changing the scene root.
+
+4. Simplify `apps/web/src/main.ts`.
+   - Keep TLE sampling, animation-frame progression, and lifecycle wiring in `main.ts`.
+   - Replace direct Three.js setup with calls into the scene composition layer.
+   - Preserve current camera framing, colors, Earth size, orbit trace, and satellite marker behavior.
+
+5. Validate.
+   - Run `CI=true pnpm --dir apps/web check`.
+   - Run `CI=true pnpm --dir apps/web build`.
+   - Run `CI=true pnpm --dir apps/web smoke`.
+   - If the in-app browser is available, do a quick visual check at desktop and narrow viewport sizes.
 
 ### Approval Question
 
-Approve the scene module boundaries before adding controls.
+Approve the `createOrbitScene` plus `orbitTrace` module boundary before implementation.
 
 ## Increment 3: Deterministic Epoch and Sampling Controls
 
