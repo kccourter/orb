@@ -232,7 +232,8 @@ Centralize JVM and Orekit initialization so route handlers do not manage runtime
 
 ### Increment Completion Notes
 
-- Update this plan or the Goal 02 README with the verified `orekit-data/` policy.
+- Verified during Increment 2: Orekit/JPype bootstrap succeeds with the bundled `jdk4py` runtime when `JAVA_HOME` and `jvmpath` are set from `jdk4py`; no `OREKIT_DATA_PATH` is required for runtime initialization alone.
+- TLE construction and propagation data requirements remain to be verified during Increment 3.
 - Do not wire the runtime into FastAPI route handlers yet except for isolated health/status experiments if explicitly approved.
 
 ### Validation
