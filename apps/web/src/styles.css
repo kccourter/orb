@@ -97,10 +97,11 @@ body {
   position: fixed;
   inset: 76px auto auto 16px;
   z-index: 10;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
-  width: min(calc(100vw - 32px), 420px);
+  width: min(calc(100vw - 32px), 640px);
   min-height: 40px;
   padding: 8px 10px;
   box-sizing: border-box;
@@ -178,6 +179,32 @@ body {
   background: #4ecdc4;
 }
 
+.orekit-overlay__metrics {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, auto));
+  gap: 4px 10px;
+  align-items: baseline;
+  margin: 0;
+  color: rgb(232 241 245 / 84%);
+  font-size: 0.72rem;
+}
+
+.orekit-overlay__metrics dt,
+.orekit-overlay__metrics dd {
+  margin: 0;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.orekit-overlay__metrics dt {
+  color: rgb(232 241 245 / 56%);
+}
+
+.orekit-overlay__metrics dd {
+  font-variant-numeric: tabular-nums;
+}
+
 .orekit-overlay[data-status="error"] .orekit-overlay__status {
   color: #ffb4a8;
 }
@@ -203,7 +230,7 @@ body {
 @media (max-width: 420px) {
   .orekit-overlay {
     align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .orekit-overlay__legend {
@@ -212,5 +239,9 @@ body {
 
   .orekit-overlay__status {
     white-space: normal;
+  }
+
+  .orekit-overlay__metrics {
+    grid-template-columns: repeat(2, minmax(0, auto));
   }
 }

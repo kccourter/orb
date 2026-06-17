@@ -518,6 +518,10 @@ type DivergenceSummary = {
 
 - Metric computation must be pure and fixture-checkable.
 - The readout should update from animation state without redoing the whole alignment each frame.
+- Implemented during Increment 4: pure divergence series and summary helpers, fixture checks for distance math and formatting, and a compact metrics readout inside the Orekit overlay.
+- The readout now reports frame, current distance, max distance, mean distance, aligned pair count, and unmatched local/Orekit counts.
+- Current distance updates from the existing animation loop by using the local animated sample epoch and nearest aligned divergence point.
+- Empty or invalid comparisons clear the metrics to `--` while preserving local rendering and API status behavior.
 
 ### Validation
 
@@ -525,6 +529,7 @@ type DivergenceSummary = {
 - `pnpm --dir apps/web build`
 - `pnpm --dir apps/web smoke`
 - Manual verification with known identical fixture data if available.
+- Verified during Increment 4 with `CI=true pnpm --dir apps/web check`, `CI=true pnpm --dir apps/web build`, and `CI=true pnpm --dir apps/web smoke`.
 
 ### Approval Question
 

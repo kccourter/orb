@@ -87,6 +87,8 @@ test("requests Orekit samples from the manual refresh control", async ({ page })
   await expect(page.getByTestId("orekit-status")).toHaveText(
     "Orekit TEME: 2 samples",
   );
+  await expect(page.getByTestId("divergence-readout")).toContainText("Max");
+  await expect(page.getByTestId("divergence-readout")).toContainText("Aligned");
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 

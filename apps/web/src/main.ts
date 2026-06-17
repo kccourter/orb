@@ -3,11 +3,17 @@ import {
   fetchTlePropagation,
   type OrekitOrbitSample,
 } from "./api/propagation";
+import "./orbits/fixtureChecks";
 import { ISS_TLE } from "./orbits/fixtures";
 import {
   alignOrbitSamples,
   type SampleAlignment,
 } from "./orbits/alignment";
+import {
+  computeDivergenceSeries,
+  summarizeDivergence,
+  type DivergenceSeries,
+} from "./orbits/divergence";
 import {
   orekitSampleToComparable,
   satelliteJsSampleToComparable,
@@ -44,6 +50,7 @@ let currentSettings = normalizeOrbitSettings(DEFAULT_ORBIT_SETTINGS);
 let localSamples: TleOrbitSample[] = [];
 let orekitSamples: OrekitOrbitSample[] = [];
 let sampleAlignment: SampleAlignment | null = null;
+let divergenceSeries: DivergenceSeries | null = null;
 let orekitRequestId = 0;
 let points = recomputeOrbit(currentSettings);
 let frame = 0;
@@ -53,11 +60,13 @@ function updateOrbit(settings: OrbitSettings) {
   points = recomputeOrbit(currentSettings);
   orekitSamples = [];
   sampleAlignment = null;
+  divergenceSeries = null;
   orbitScene.clearTrace("orekit");
   orekitControls.setStatus({
     status: "idle",
     message: "Refresh Orekit",
   });
+  orekitControls.setDivergenceSummary(null);
   frame = 0;
 }
 
@@ -98,6 +107,7 @@ async function refreshOrekitSamples() {
       status: "error",
       message: result.message,
     });
+    orekitControls.setDivergenceSummary(null);
     return;
   }
 
@@ -109,14 +119,17 @@ async function refreshOrekitSamples() {
 
   if (!alignmentResult.ok) {
     sampleAlignment = null;
+    divergenceSeries = null;
     orekitControls.setStatus({
       status: "error",
       message: alignmentResult.error.message,
     });
+    orekitControls.setDivergenceSummary(null);
     return;
   }
 
   sampleAlignment = alignmentResult.alignment;
+  divergenceSeries = computeDivergenceSeries(sampleAlignment);
   orbitScene.setTracePoints(
     "orekit",
     comparableSamplesToScenePoints(
@@ -128,6 +141,7 @@ async function refreshOrekitSamples() {
     sampleCount: orekitSamples.length,
     frame: result.response.frame.name,
   });
+  updateDivergenceReadout(localSamples[frame]?.epoch);
 }
 
 function resize() {
@@ -144,9 +158,24 @@ function animate() {
   if (point) {
     orbitScene.setSatellitePosition(point);
   }
+  updateDivergenceReadout(localSamples[frame]?.epoch);
 
   orbitScene.rotateEarth();
   orbitScene.render();
+}
+
+function updateDivergenceReadout(currentEpoch?: Date) {
+  if (!divergenceSeries) {
+    return;
+  }
+
+  orekitControls.setDivergenceSummary(
+    summarizeDivergence(
+      divergenceSeries,
+      currentEpoch ? currentEpoch.toISOString() : null,
+    ),
+    `${divergenceSeries.frame}`,
+  );
 }
 
 window.addEventListener("resize", resize);
