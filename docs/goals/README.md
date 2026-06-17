@@ -6,7 +6,7 @@ These are intentionally top-level plans. Each goal should be reviewed and split 
 
 ## Sequence
 
-1. [Satellite TLE + Three.js](01-satellite-tle-threejs/README.md)
+1. [Satellite TLE + Three.js](01-satellite-tle-threejs/README.md) - completed; see [record](01-satellite-tle-threejs/RECORD.md)
 2. [Orekit PV Endpoint](02-orekit-pv-endpoint/README.md)
 3. [Trace Divergence Overlay](03-trace-divergence-overlay/README.md)
 4. [Frame Controls](04-frame-controls/README.md)

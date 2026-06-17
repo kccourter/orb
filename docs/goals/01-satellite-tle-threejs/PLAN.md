@@ -35,7 +35,7 @@ Move browser-side TLE propagation out of the scene entrypoint and into a typed m
 
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
-- Manual browser smoke test.
+- `pnpm --dir apps/web smoke`
 
 ### Approval Question
 
@@ -197,18 +197,42 @@ Record the checks that prove Goal 01 is ready to support Orekit integration.
 
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
-- Browser smoke test.
+- `pnpm --dir apps/web smoke`
+- Optional in-app browser visual check if the Codex browser surface is available.
+
+### Implementation Plan
+
+1. Update Goal 01 README.
+   - Replace remaining broad validation wording with the actual TypeScript, production build, and Playwright smoke commands.
+   - Document the deterministic default epoch, sampling controls, `TEME` frame label, kilometer sample units, and scene display scale.
+   - Note that `satellite.js` remains a visualization path rather than the authoritative dynamics model.
+
+2. Add `docs/goals/01-satellite-tle-threejs/RECORD.md`.
+   - Summarize completed increments and the implemented module boundaries.
+   - Record commands run and results.
+   - Capture known warnings or remaining risks, including Vite warnings from `satellite.js` WASM helper exports and chunk-size output.
+   - Note whether the in-app browser was available; use Playwright smoke output as the repeatable visual QA record.
+
+3. Review related docs for stale Goal 01 wording.
+   - Check `docs/goals/README.md` for status language that should mention Goal 01 completion.
+   - Avoid broad README or architecture churn unless stale text directly conflicts with the implemented Goal 01 behavior.
+
+4. Run validation.
+   - Run `CI=true pnpm --dir apps/web check`.
+   - Run `CI=true pnpm --dir apps/web build`.
+   - Run `CI=true pnpm --dir apps/web smoke`.
+   - If the in-app browser is available, do a quick desktop/narrow visual pass and record it; otherwise record that Playwright Chromium was used.
 
 ### Approval Question
 
-Approve the completion record before moving to Goal 02.
+Approve the Goal 01 README updates and completion record before moving to Goal 02.
 
-## Open Decisions
+## Resolved Decisions
 
-- Frame label for `satellite.js` output: likely `TEME`, but the exact wording should be explicit.
-- Whether UI controls are plain DOM or a small component/state layer.
-- Whether to add a test runner now or defer frontend unit tests until divergence math appears.
-- Whether Earth remains a simple mesh or gets texture/assets in this first goal.
+- Frame label for `satellite.js` output is `TEME`.
+- Sampling controls use plain DOM helpers and CSS.
+- Playwright provides the repeatable frontend smoke-test path.
+- Earth remains a simple mesh for Goal 01.
 
 ## Not In Scope
 
