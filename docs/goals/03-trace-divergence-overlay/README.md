@@ -35,7 +35,16 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 ## Dependencies
 
 - Goal 01 browser-side samples.
-- Goal 02 Orekit sample endpoint.
+- Goal 02 Orekit sample endpoint: `POST /propagate/tle`.
+
+## Goal 02 Handoff Notes
+
+- Request Orekit samples with explicit TLE lines, `start_epoch`, `duration_minutes`, `step_seconds`, and `frame: "native"`.
+- Goal 02 returns native Orekit TLE samples in `TEME`, with positions in kilometers and velocities in kilometers per second.
+- Live API propagation requires the Python service to run with `OREKIT_DATA_PATH` set.
+- Goal 02 samples use inclusive cadence: `floor(duration_seconds / step_seconds) + 1`. For the Goal 01 defaults, Orekit returns 186 samples.
+- Goal 01 browser sampling currently uses its own sample-count calculation. Align `satellite.js` and Orekit samples by epoch before computing divergence.
+- Treat matching `TEME` labels as a required precondition for the first comparison; later frame transforms belong to Goal 04.
 
 ## Risks
 

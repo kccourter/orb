@@ -58,7 +58,7 @@ Response:
     "propagator": "orekit-tle"
   },
   "frame": {
-    "name": "TO_BE_VERIFIED",
+    "name": "TEME",
     "authority": "orekit",
     "is_native": true
   },
@@ -474,12 +474,12 @@ Document how to run and consume the endpoint, then capture decisions needed by t
 
 Approve documentation and handoff notes before considering the goal complete.
 
-## Open Decisions
+## Resolved Decisions
 
-- Exact Orekit frame label: return the actual Orekit output frame name once verified during Increment 3.
-- Orekit data policy: defer `orekit-data/` for the first TLE-only endpoint if the implemented Orekit path supports it; otherwise document the required local setup.
-- Test strategy: decide how much JVM-backed testing should run by default versus behind a marker.
-- Error taxonomy: decide whether to introduce project-specific exception types before or during route integration.
+- Exact Orekit frame label: native Orekit TLE propagation returns `TEME` for the ISS fixture.
+- Orekit data policy: live TLE propagation requires `OREKIT_DATA_PATH`; runtime initialization alone does not.
+- Test strategy: default pytest does not require Orekit data and skips live propagation; data-enabled pytest runs live adapter coverage when `OREKIT_DATA_PATH` is set.
+- Error taxonomy: route integration maps `TlePropagationError` to `400` and `OrekitRuntimeError` to `503`.
 
 ## Not In Scope
 
