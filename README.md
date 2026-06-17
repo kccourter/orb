@@ -19,6 +19,13 @@ uv venv --python 3.14
 uv sync --extra dev
 ```
 
+Orekit TLE propagation needs Orekit data for UTC/leap-second history. Keep the data local and point the API at it:
+
+```sh
+export OREKIT_DATA_PATH="$PWD/orekit-data.zip"
+uv run orb-api
+```
+
 For JavaScript dependencies, install or expose a normal Node distribution with Corepack, then:
 
 ```sh

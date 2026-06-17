@@ -35,7 +35,7 @@ Move browser-side TLE propagation out of the scene entrypoint and into a typed m
 
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
-- Manual browser smoke test.
+- `pnpm --dir apps/web smoke`
 
 ### Approval Question
 
@@ -70,11 +70,37 @@ Separate Three.js scene setup from orbit data generation.
 
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
-- Manual browser verification at desktop and narrow viewport sizes.
+- `pnpm --dir apps/web smoke`
+- Manual browser verification at desktop and narrow viewport sizes if the in-app browser is available.
+
+### Implementation Plan
+
+1. Add scene constants and unit helpers.
+   - Define Earth radius, orbit-position scale, camera defaults, and common colors in the scene layer.
+   - Keep `satellite.js` samples in kilometers and perform only scene-display scaling at the scene boundary.
+
+2. Add `apps/web/src/scene/createScene.ts`.
+   - Export a `createOrbitScene(canvas)` helper that owns renderer, scene, camera, lights, Earth mesh, orbit trace, satellite marker, resize, render, and dispose handles.
+   - Keep the public return shape small and explicit so `main.ts` can orchestrate data and animation without knowing geometry setup details.
+
+3. Add `apps/web/src/scene/orbitTrace.ts`.
+   - Export helpers to convert typed orbit samples to scene vectors and update trace geometry.
+   - Include marker update behavior in the scene API or adjacent trace helper so later Orekit overlay work can add a second trace without changing the scene root.
+
+4. Simplify `apps/web/src/main.ts`.
+   - Keep TLE sampling, animation-frame progression, and lifecycle wiring in `main.ts`.
+   - Replace direct Three.js setup with calls into the scene composition layer.
+   - Preserve current camera framing, colors, Earth size, orbit trace, and satellite marker behavior.
+
+5. Validate.
+   - Run `CI=true pnpm --dir apps/web check`.
+   - Run `CI=true pnpm --dir apps/web build`.
+   - Run `CI=true pnpm --dir apps/web smoke`.
+   - If the in-app browser is available, do a quick visual check at desktop and narrow viewport sizes.
 
 ### Approval Question
 
-Approve the scene module boundaries before adding controls.
+Approve the `createOrbitScene` plus `orbitTrace` module boundary before implementation.
 
 ## Increment 3: Deterministic Epoch and Sampling Controls
 
@@ -105,11 +131,44 @@ Make sampling reproducible and adjustable without turning the app into a full da
 
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
-- Manual browser test of sample settings.
+- `pnpm --dir apps/web smoke`
+- Manual browser test of sample settings if the in-app browser is available.
+
+### Implementation Plan
+
+1. Add orbit settings state.
+   - Create `apps/web/src/state/orbitSettings.ts` with a deterministic default epoch, duration, and step size.
+   - Use an ISO UTC string for the default epoch so reloads produce the same sampled trace.
+   - Derive sample count from `durationMinutes` and `stepSeconds`, with clamping for valid ranges.
+
+2. Add compact DOM controls.
+   - Create `apps/web/src/ui/controls.ts` for a small control surface over the canvas.
+   - Include epoch display/edit, reset-to-default epoch, duration minutes, and step seconds.
+   - Keep the UI plain DOM and CSS; do not introduce a component framework or dashboard layout.
+
+3. Recompute orbit samples on settings changes.
+   - Keep `main.ts` responsible for orchestration: current settings, TLE sampling, trace update, marker animation index reset.
+   - Reuse `sampleTleOrbit`, `orbitSamplesToScenePoints`, and `orbitScene.setOrbitPoints`.
+   - Clamp or reject invalid inputs predictably before sampling.
+
+4. Update styles.
+   - Add a compact fixed control bar or panel that does not obscure the main orbit view.
+   - Keep text and controls readable on narrow viewports without changing the scene layout.
+
+5. Extend smoke coverage where practical.
+   - Keep the existing nonblank canvas assertion.
+   - Add a lightweight Playwright interaction check that changing duration or step recomputes without blanking the scene.
+   - Avoid brittle visual assertions about exact pixel positions until the epoch and camera are fully frozen.
+
+6. Validate.
+   - Run `CI=true pnpm --dir apps/web check`.
+   - Run `CI=true pnpm --dir apps/web build`.
+   - Run `CI=true pnpm --dir apps/web smoke`.
+   - If the in-app browser is available, manually try reset epoch and sample-setting changes at desktop and narrow widths.
 
 ### Approval Question
 
-Approve the minimal control surface before adding validation notes.
+Approve the deterministic defaults and compact DOM control surface before implementation.
 
 ## Increment 4: Frontend Validation and Visual QA Notes
 
@@ -138,18 +197,42 @@ Record the checks that prove Goal 01 is ready to support Orekit integration.
 
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
-- Browser smoke test.
+- `pnpm --dir apps/web smoke`
+- Optional in-app browser visual check if the Codex browser surface is available.
+
+### Implementation Plan
+
+1. Update Goal 01 README.
+   - Replace remaining broad validation wording with the actual TypeScript, production build, and Playwright smoke commands.
+   - Document the deterministic default epoch, sampling controls, `TEME` frame label, kilometer sample units, and scene display scale.
+   - Note that `satellite.js` remains a visualization path rather than the authoritative dynamics model.
+
+2. Add `docs/goals/01-satellite-tle-threejs/RECORD.md`.
+   - Summarize completed increments and the implemented module boundaries.
+   - Record commands run and results.
+   - Capture known warnings or remaining risks, including Vite warnings from `satellite.js` WASM helper exports and chunk-size output.
+   - Note whether the in-app browser was available; use Playwright smoke output as the repeatable visual QA record.
+
+3. Review related docs for stale Goal 01 wording.
+   - Check `docs/goals/README.md` for status language that should mention Goal 01 completion.
+   - Avoid broad README or architecture churn unless stale text directly conflicts with the implemented Goal 01 behavior.
+
+4. Run validation.
+   - Run `CI=true pnpm --dir apps/web check`.
+   - Run `CI=true pnpm --dir apps/web build`.
+   - Run `CI=true pnpm --dir apps/web smoke`.
+   - If the in-app browser is available, do a quick desktop/narrow visual pass and record it; otherwise record that Playwright Chromium was used.
 
 ### Approval Question
 
-Approve the completion record before moving to Goal 02.
+Approve the Goal 01 README updates and completion record before moving to Goal 02.
 
-## Open Decisions
+## Resolved Decisions
 
-- Frame label for `satellite.js` output: likely `TEME`, but the exact wording should be explicit.
-- Whether UI controls are plain DOM or a small component/state layer.
-- Whether to add a test runner now or defer frontend unit tests until divergence math appears.
-- Whether Earth remains a simple mesh or gets texture/assets in this first goal.
+- Frame label for `satellite.js` output is `TEME`.
+- Sampling controls use plain DOM helpers and CSS.
+- Playwright provides the repeatable frontend smoke-test path.
+- Earth remains a simple mesh for Goal 01.
 
 ## Not In Scope
 

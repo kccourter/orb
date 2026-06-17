@@ -10,8 +10,12 @@ __pycache__/
 .mypy_cache/
 
 node_modules/
+.pnpm-store/
 dist/
 apps/web/dist/
+apps/web/playwright-report/
+apps/web/test-results/
 *.tsbuildinfo
 
 orekit-data/
+orekit-data.zip

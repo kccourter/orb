@@ -2,7 +2,7 @@
 
 ## Objective
 
-Propagate an ISS TLE in `satellite.js` and render sampled ECI points in the Three.js scene.
+Propagate an ISS TLE in `satellite.js` and render sampled TEME-position points in the Three.js scene.
 
 ## Why First
 
@@ -10,26 +10,29 @@ This creates the minimum useful visualization loop: TLE input, browser-side prop
 
 ## Acceptance Criteria
 
-- The web app renders Earth, an orbit trace, and a satellite marker from sampled `satellite.js` ECI coordinates.
+- The web app renders Earth, an orbit trace, and a satellite marker from sampled `satellite.js` TEME coordinates.
 - The TLE source is explicit and easy to replace during experiments.
 - The sampled trace is stable across reloads for a fixed epoch.
 - The scene has enough camera framing and scale consistency to support later overlays.
-- The implementation includes a lightweight validation path for TypeScript build or type checking.
+- The implementation includes TypeScript, production build, and Playwright smoke-test validation.
 
-## Proposed Increments
+## Completed Increments
 
 1. Extract TLE propagation into a dedicated TypeScript module with typed sample output.
 2. Add a simple scene composition layer for Earth, trace geometry, and satellite marker.
 3. Add deterministic epoch handling and basic sample controls.
 4. Add frontend validation notes and smoke-test instructions.
 
-See [PLAN.md](PLAN.md) for approval-sized implementation increments.
+See [PLAN.md](PLAN.md) for the approved increment plan and [RECORD.md](RECORD.md) for the completion record.
 
 ## Design Notes
 
 - Treat `satellite.js` output as a visualization path, not the authoritative dynamics model.
-- Use kilometers as the internal scene unit unless a later goal proves another scale is cleaner.
+- Sample outputs from `satellite.js` are labeled `TEME` and stored as kilometers plus kilometers per second.
+- The scene display scale is 1 Three.js unit per 1,000 kilometers; Earth renders with radius `6.371` scene units.
+- The default sampling settings are deterministic: epoch `2024-06-21T13:31:24Z`, duration `92.5` minutes, and step `30` seconds.
 - Keep the scene logic small enough that frame transforms and overlays can be introduced without a rewrite.
+- Sampling controls are plain DOM controls for epoch, duration, step size, and reset.
 
 ## Dependencies
 
@@ -39,11 +42,11 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 
 ## Risks
 
-- Coordinate naming can drift between ECI/TEME assumptions if not documented carefully.
+- Coordinate naming can drift if later goals treat `satellite.js` TEME positions as another frame without an explicit transform.
 - Camera and unit scaling choices can make later divergence overlays visually misleading.
 
 ## Validation
 
-- `pnpm --dir apps/web check`
-- `pnpm --dir apps/web build`
-- Manual browser smoke test of orbit trace and marker animation.
+- `CI=true pnpm --dir apps/web check`
+- `CI=true pnpm --dir apps/web build`
+- `CI=true pnpm --dir apps/web smoke`
