@@ -111,6 +111,28 @@ Frontend code should normalize this to an app-owned sample type before rendering
 4. Increment 4 computes and displays divergence metrics.
 5. Increment 5 adds repeatable fixtures, visual QA notes, and handoff documentation.
 
+## Cross-Increment State Model
+
+Use a small explicit state model in `main.ts` rather than scattering booleans:
+
+```ts
+type OrekitOverlayState =
+  | { status: "idle" }
+  | { status: "loading"; requestId: number }
+  | { status: "ready"; requestId: number; samples: OrekitOrbitSample[] }
+  | { status: "error"; requestId: number; message: string };
+```
+
+Derived comparison state should be recomputed from local samples, Orekit samples, and current settings:
+
+```ts
+type ComparisonState =
+  | { status: "unavailable"; reason: string }
+  | { status: "ready"; alignment: SampleAlignment; divergence: DivergenceSeries };
+```
+
+If multiple API requests overlap, only the latest `requestId` may update the scene and readout. This avoids stale responses replacing newer settings.
+
 ## Increment 1: Propagation API Client
 
 ### Objective
@@ -166,6 +188,30 @@ Add a frontend client for the Orekit propagation endpoint from Goal 02.
 5. Validate the client.
    - Run frontend type/build checks.
    - With the Python API running, make one manual request from the browser flow.
+
+### Planned Client Details
+
+- `buildTlePropagationRequest(tle, settings)` should be a pure helper.
+- `fetchTlePropagation` should return a discriminated result instead of throwing into `main.ts`:
+  - `{ ok: true; response: NormalizedPropagationResponse }`
+  - `{ ok: false; status?: number; code?: string; message: string }`
+- Network failures, non-JSON responses, and Goal 02 error payloads should all become the same error-result shape.
+- Use `AbortController` if it fits cleanly; otherwise use `requestId` checks to ignore stale responses.
+- Do not store API samples in Three.js-specific types.
+
+### Edge Cases
+
+- API server offline.
+- API returns `503` because `OREKIT_DATA_PATH` is missing.
+- API returns `422` due to request construction bug.
+- User changes settings while an API request is in flight.
+- User refreshes Orekit before any settings change.
+
+### Increment Completion Notes
+
+- The app may fetch and store Orekit samples in this increment, but it does not need to render the Orekit trace yet.
+- Any visible UI added here should be minimal: refresh action plus status text.
+- Keep route URL and request construction documented for Increment 5.
 
 ### Validation
 
@@ -226,6 +272,45 @@ Align `satellite.js` and Orekit samples by epoch before comparing positions.
 4. Add fixture checks.
    - Include equal-epoch, missing-sample, extra-sample, and frame-mismatch fixtures.
    - If no test runner is added, expose typed fixture assertions that compile under `pnpm --dir apps/web check`.
+
+### Planned Alignment Types
+
+```ts
+type ComparableOrbitSample = {
+  epochIso: string;
+  source: "satellite-js" | "orekit";
+  frame: "TEME" | string;
+  positionKm: { x: number; y: number; z: number };
+  velocityKmPerSecond?: { x: number; y: number; z: number };
+};
+
+type AlignedSamplePair = {
+  epochIso: string;
+  local: ComparableOrbitSample;
+  remote: ComparableOrbitSample;
+};
+
+type SampleAlignment = {
+  pairs: AlignedSamplePair[];
+  localOnly: ComparableOrbitSample[];
+  remoteOnly: ComparableOrbitSample[];
+  toleranceMilliseconds: number;
+};
+```
+
+### Fixture Expectations
+
+- Equal epochs produce one pair and zero unmatched samples.
+- One extra Orekit endpoint sample becomes `remoteOnly`.
+- A one-millisecond serialization difference can still pair.
+- A larger timestamp difference remains unmatched.
+- Frame mismatch returns a comparison precondition failure before divergence is computed.
+
+### Increment Completion Notes
+
+- Keep alignment deterministic and side-effect free.
+- Do not interpolate in Goal 03.
+- Record any actual Goal 01/Goal 02 sample-count mismatch observed during manual checks.
 
 ### Validation
 
@@ -291,6 +376,41 @@ Render both propagation traces clearly in the same scene.
    - API offline: local trace visible and error state shown.
    - Desktop and narrow viewport smoke.
 
+### Planned Scene API
+
+Prefer a named trace API if the edit stays small:
+
+```ts
+type OrbitTraceId = "satellite-js" | "orekit";
+
+type OrbitScene = {
+  setTracePoints: (traceId: OrbitTraceId, points: readonly THREE.Vector3[]) => void;
+  clearTrace: (traceId: OrbitTraceId) => void;
+  setSatellitePosition: (point: THREE.Vector3) => void;
+  // existing resize/render/dispose methods
+};
+```
+
+If that creates too much churn, a narrower `setOrekitOrbitPoints`/`clearOrekitOrbit` pair is acceptable for Goal 03.
+
+### Visual Defaults
+
+- `satellite.js`: keep current yellow trace and white marker.
+- `Orekit`: use a distinct cool cyan/green trace that remains visible over the existing dark background and blue Earth.
+- Do not add a second animated marker in Goal 03 unless the trace alone is unclear.
+- Use a compact legend/status line rather than floating cards.
+
+### Edge Cases
+
+- Orekit trace is cleared after a failed refresh only if the failed response belongs to the current settings.
+- Previous successful Orekit trace may remain visible with a stale/error status if that is clearer than disappearing data.
+- Canvas must remain nonblank after clearing Orekit data.
+
+### Increment Completion Notes
+
+- Verify the scene at desktop and narrow widths.
+- Keep the rendering layer source-agnostic enough for Goal 04 frame controls.
+
 ### Validation
 
 - `pnpm --dir apps/web check`
@@ -353,6 +473,45 @@ Compute and expose distance divergence between aligned samples.
    - Zero aligned pairs.
    - Missing local or Orekit samples.
 
+### Planned Metric Types
+
+```ts
+type DivergencePoint = {
+  epochIso: string;
+  distanceKm: number;
+};
+
+type DivergenceSummary = {
+  currentDistanceKm: number | null;
+  maxDistanceKm: number | null;
+  meanDistanceKm: number | null;
+  alignedCount: number;
+  localOnlyCount: number;
+  remoteOnlyCount: number;
+};
+```
+
+### Formatting Defaults
+
+- Distances under 1 km: show meters, e.g. `42 m`.
+- Distances from 1 km to 999 km: show kilometers with two decimals.
+- Very large distances: show kilometers with no decimals.
+- Counts should be plain integers.
+- Empty values should render as `--`, not `NaN`.
+
+### Readout States
+
+- Idle: no Orekit comparison loaded.
+- Loading: request in flight.
+- Ready: show source pair, frame, current/max/mean, aligned/unmatched counts.
+- Error: show concise API or comparison error while preserving the local trace.
+- Frame mismatch: show no metrics and the two frame labels.
+
+### Increment Completion Notes
+
+- Metric computation must be pure and fixture-checkable.
+- The readout should update from animation state without redoing the whole alignment each frame.
+
 ### Validation
 
 - `pnpm --dir apps/web check`
@@ -407,6 +566,26 @@ Make the comparison behavior repeatable and document what Goal 04 can rely on.
    - Record that Goal 03 compares native `TEME` samples only.
    - Note scene APIs and sample metadata available for frame controls.
    - Keep frame transforms out of Goal 03.
+
+### Final Documentation Checklist
+
+- `README.md` for Goal 03 marks the goal complete and links to `RECORD.md`.
+- `RECORD.md` lists completed increments, commands run, API setup used, browser visual QA, and known risks.
+- Goal 03 docs state that comparison is native `TEME` only.
+- Goal 03 docs state that samples are aligned by epoch, not index.
+- Goal 03 docs state that Orekit refresh is manual.
+- Goal 04 README or plan notes mention any scene/sample APIs it can rely on.
+- Top-level `docs/goals/README.md` marks Goal 03 complete only after implementation and validation.
+
+### Final Validation Matrix
+
+- API offline, desktop viewport.
+- API offline, narrow viewport.
+- API online with `OREKIT_DATA_PATH`, desktop viewport.
+- API online with `OREKIT_DATA_PATH`, narrow viewport.
+- Sampling settings changed after a successful Orekit refresh.
+- Orekit refresh after settings change.
+- Reset settings after Orekit data is loaded.
 
 ### Validation
 
