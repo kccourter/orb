@@ -212,6 +212,8 @@ Add a frontend client for the Orekit propagation endpoint from Goal 02.
 - The app may fetch and store Orekit samples in this increment, but it does not need to render the Orekit trace yet.
 - Any visible UI added here should be minimal: refresh action plus status text.
 - Keep route URL and request construction documented for Increment 5.
+- Implemented during Increment 1: frontend API client, base URL config, manual Orekit refresh/status control, structured fetch result handling, and stale response protection with request IDs.
+- Verified during Increment 1: smoke coverage intercepts `POST /propagate/tle`, checks request shape, and confirms the local scene remains nonblank after refresh.
 
 ### Validation
 

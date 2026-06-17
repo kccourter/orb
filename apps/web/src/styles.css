@@ -93,6 +93,72 @@ body {
   background: rgb(255 255 255 / 14%);
 }
 
+.orekit-overlay {
+  position: fixed;
+  inset: 76px auto auto 16px;
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: min(calc(100vw - 32px), 420px);
+  min-height: 40px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  background: rgb(7 16 20 / 82%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.orekit-overlay__button {
+  min-height: 30px;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 6px;
+  background: rgb(78 205 196 / 14%);
+  color: #f3f8fa;
+  font: inherit;
+  font-size: 0.84rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.orekit-overlay__button {
+  padding: 0 10px;
+}
+
+.orekit-overlay__button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.orekit-overlay__button:focus-visible {
+  outline: 2px solid #4ecdc4;
+  outline-offset: 2px;
+}
+
+.orekit-overlay__button:not(:disabled):hover {
+  background: rgb(78 205 196 / 22%);
+}
+
+.orekit-overlay__status {
+  min-width: 0;
+  overflow: hidden;
+  color: rgb(232 241 245 / 78%);
+  font-size: 0.78rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orekit-overlay[data-status="error"] .orekit-overlay__status {
+  color: #ffb4a8;
+}
+
+.orekit-overlay[data-status="ready"] .orekit-overlay__status {
+  color: #a6f4df;
+}
+
 @media (max-width: 680px) {
   .orbit-controls {
     grid-template-columns: 1fr 1fr;
@@ -100,5 +166,20 @@ body {
 
   .orbit-controls__field--epoch {
     grid-column: 1 / -1;
+  }
+
+  .orekit-overlay {
+    inset-block-start: 154px;
+  }
+}
+
+@media (max-width: 420px) {
+  .orekit-overlay {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .orekit-overlay__status {
+    white-space: normal;
   }
 }

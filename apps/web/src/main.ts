@@ -1,5 +1,10 @@
+import {
+  buildTlePropagationRequest,
+  fetchTlePropagation,
+  type OrekitOrbitSample,
+} from "./api/propagation";
 import { ISS_TLE } from "./orbits/fixtures";
-import { sampleTleOrbit } from "./orbits/tle";
+import { sampleTleOrbit, type TleOrbitSample } from "./orbits/tle";
 import { createOrbitScene } from "./scene/createScene";
 import { orbitSamplesToScenePoints } from "./scene/orbitTrace";
 import {
@@ -9,6 +14,7 @@ import {
   type OrbitSettings,
 } from "./state/orbitSettings";
 import { createOrbitControls } from "./ui/controls";
+import { createOrekitOverlayControls } from "./ui/orekitOverlayControls";
 import "./styles.css";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#scene");
@@ -19,13 +25,25 @@ if (!canvas) {
 
 const orbitScene = createOrbitScene(canvas);
 const controls = createOrbitControls(DEFAULT_ORBIT_SETTINGS, updateOrbit);
+const orekitControls = createOrekitOverlayControls(refreshOrekitSamples);
 document.body.append(controls.element);
+document.body.append(orekitControls.element);
 
-let points = recomputeOrbit(DEFAULT_ORBIT_SETTINGS);
+let currentSettings = normalizeOrbitSettings(DEFAULT_ORBIT_SETTINGS);
+let localSamples: TleOrbitSample[] = [];
+let orekitSamples: OrekitOrbitSample[] = [];
+let orekitRequestId = 0;
+let points = recomputeOrbit(currentSettings);
 let frame = 0;
 
 function updateOrbit(settings: OrbitSettings) {
-  points = recomputeOrbit(settings);
+  currentSettings = normalizeOrbitSettings(settings);
+  points = recomputeOrbit(currentSettings);
+  orekitSamples = [];
+  orekitControls.setStatus({
+    status: "idle",
+    message: "Refresh Orekit",
+  });
   frame = 0;
 }
 
@@ -33,11 +51,11 @@ function recomputeOrbit(settings: OrbitSettings) {
   const normalizedSettings = normalizeOrbitSettings(settings);
   controls?.setSettings(normalizedSettings);
 
-  const samples = sampleTleOrbit(
+  localSamples = sampleTleOrbit(
     ISS_TLE,
     toTlePropagationSettings(normalizedSettings),
   );
-  const nextPoints = orbitSamplesToScenePoints(samples);
+  const nextPoints = orbitSamplesToScenePoints(localSamples);
   orbitScene.setOrbitPoints(nextPoints);
 
   if (nextPoints[0]) {
@@ -45,6 +63,36 @@ function recomputeOrbit(settings: OrbitSettings) {
   }
 
   return nextPoints;
+}
+
+async function refreshOrekitSamples() {
+  const requestId = orekitRequestId + 1;
+  orekitRequestId = requestId;
+
+  orekitControls.setStatus({ status: "loading" });
+
+  const result = await fetchTlePropagation(
+    buildTlePropagationRequest(ISS_TLE, currentSettings),
+  );
+
+  if (requestId !== orekitRequestId) {
+    return;
+  }
+
+  if (!result.ok) {
+    orekitControls.setStatus({
+      status: "error",
+      message: result.message,
+    });
+    return;
+  }
+
+  orekitSamples = result.response.samples;
+  orekitControls.setStatus({
+    status: "ready",
+    sampleCount: orekitSamples.length,
+    frame: result.response.frame.name,
+  });
 }
 
 function resize() {

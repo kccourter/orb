@@ -32,6 +32,58 @@ test("recomputes the orbit from sampling controls", async ({ page }) => {
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 
+test("requests Orekit samples from the manual refresh control", async ({ page }) => {
+  await page.route("http://127.0.0.1:8000/propagate/tle", async (route) => {
+    const request = route.request();
+    const payload = request.postDataJSON();
+
+    expect(payload.frame).toBe("native");
+    expect(payload.sampling.start_epoch).toBe("2024-06-21T13:31:24Z");
+
+    await route.fulfill({
+      contentType: "application/json",
+      json: {
+        source: {
+          type: "tle",
+          name: "ISS (ZARYA)",
+          propagator: "orekit-tle",
+        },
+        frame: {
+          name: "TEME",
+          authority: "orekit",
+          is_native: true,
+        },
+        units: {
+          position: "km",
+          velocity: "km/s",
+        },
+        sampling: {
+          start_epoch: "2024-06-21T13:31:24Z",
+          duration_minutes: 92.5,
+          step_seconds: 30,
+          sample_count: 1,
+        },
+        samples: [
+          {
+            epoch: "2024-06-21T13:31:24Z",
+            position_km: [1, 2, 3],
+            velocity_km_s: [4, 5, 6],
+          },
+        ],
+      },
+    });
+  });
+
+  await page.goto("/");
+
+  await expect(page.getByTestId("orekit-status")).toHaveText("Orekit idle");
+  await page.getByTestId("refresh-orekit").click();
+  await expect(page.getByTestId("orekit-status")).toHaveText(
+    "Orekit TEME: 1 samples",
+  );
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
 async function countNonBlankCanvasPixels(page: Page): Promise<number> {
   const nonBlankPixels = await page.waitForFunction(() => {
     const scene = document.querySelector<HTMLCanvasElement>("#scene");
