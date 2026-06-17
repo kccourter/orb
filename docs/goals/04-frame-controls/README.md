@@ -30,7 +30,9 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 
 - Prefer Orekit for authoritative frame transforms.
 - Keep UI state separate from propagation settings; switching frames should not silently change the propagated trajectory.
-- Local orbital frame options may need a named convention such as QSW, TNW, or LVLH before implementation.
+- Use exact frame identifiers in API payloads; avoid bare `ECI` unless it is mapped to a documented frame such as `EME2000`.
+- Prefer `EME2000` for the first explicit inertial option, `ITRF` for the first Earth-fixed option, and a documented local orbital convention such as `QSW` for the first local option unless Increment 1 revises those names.
+- Keep `native`/`TEME` compatibility explicit so Goal 03 comparison behavior remains understandable.
 
 ## Dependencies
 
