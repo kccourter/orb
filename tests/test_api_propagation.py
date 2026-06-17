@@ -66,6 +66,23 @@ def test_propagate_tle_route_returns_adapter_response(
     assert body["samples"][0]["position_km"] == [1.0, 2.0, 3.0]
 
 
+def test_propagate_tle_route_allows_vite_dev_cors_preflight() -> None:
+    client = TestClient(app)
+
+    response = client.options(
+        "/propagate/tle",
+        headers={
+            "Origin": "http://127.0.0.1:5173",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:5173"
+    assert "POST" in response.headers["access-control-allow-methods"]
+
+
 def test_propagate_tle_route_maps_runtime_error_to_503(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

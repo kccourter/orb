@@ -4,6 +4,10 @@
 
 Overlay the browser `satellite.js` trace and the Python/Orekit trace, then visualize their divergence over the sampled time range.
 
+## Status
+
+Completed on 2026-06-17. See [RECORD.md](RECORD.md) for implementation notes, validation, and Goal 04 handoff details.
+
 ## Branch Goal
 
 Add an offline-tolerant comparison path between the existing browser `satellite.js` preview and the Goal 02 Orekit endpoint. The first overlay compares native `TEME` samples only, aligns by epoch, renders both traces, and shows compact text metrics for divergence.
@@ -22,11 +26,11 @@ The project becomes analytically useful once it can compare propagation sources 
 
 ## Proposed Increments
 
-1. Add a frontend API client for propagation samples.
-2. Align sample epochs between `satellite.js` and Orekit outputs.
-3. Render dual traces with source-aware materials.
-4. Compute divergence metrics and expose a minimal readout.
-5. Add tests or fixtures for sample alignment and distance calculations.
+1. Add a frontend API client for propagation samples. Completed.
+2. Align sample epochs between `satellite.js` and Orekit outputs. Completed.
+3. Render dual traces with source-aware materials. Completed.
+4. Compute divergence metrics and expose a minimal readout. Completed.
+5. Add tests or fixtures for sample alignment and distance calculations. Completed.
 
 See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 
@@ -55,15 +59,28 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Default API base URL is `http://127.0.0.1:8000`, with a Vite env override allowed if needed.
 - Epoch alignment should use exact normalized ISO keys first, with at most a `1` millisecond tolerance fallback for serialization differences.
 
+## Implemented Behavior
+
+- Orekit refresh is manual through the overlay button; local `satellite.js` sampling remains available when the API is offline.
+- Frontend API requests use `VITE_ORB_API_BASE_URL` when set, otherwise `http://127.0.0.1:8000`.
+- Samples are normalized to app-owned types before alignment, rendering, or metric computation.
+- Comparison is native `TEME` only in Goal 03. Frame or unit mismatches stop comparison and show a nonfatal status.
+- `satellite.js` and Orekit samples are aligned by normalized ISO epoch, not by array index.
+- Divergence is Euclidean position distance in kilometers across aligned pairs.
+- The overlay readout reports frame, current distance, max distance, mean distance, aligned count, and unmatched local/Orekit counts.
+- Scene rendering uses named traces for `satellite-js` and `orekit`; the animated marker remains tied to the local `satellite.js` samples.
+
 ## Risks
 
 - Comparing coordinates from mismatched frames may produce attractive but meaningless divergence.
 - Request latency can make timeline scrubbing feel awkward if data fetching is coupled directly to animation.
 - Goal 01 and Goal 02 sample counts differ for the default window, so array-index comparison is explicitly unsafe.
+- Goal 03 does not implement frame transforms; ECI, ECEF, and local orbital frame behavior belongs to Goal 04.
 
 ## Validation
 
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
+- `pnpm --dir apps/web smoke`
 - `uv run pytest`
-- Manual browser verification with API running locally.
+- Manual browser verification with API running locally when `OREKIT_DATA_PATH` is available.

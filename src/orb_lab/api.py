@@ -5,6 +5,7 @@ from math import cos, pi, sin
 from typing import Annotated
 
 from fastapi import FastAPI, Query, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from orb_lab.models import (
@@ -19,6 +20,12 @@ from orb_lab.propagation import TlePropagationError
 from orb_lab.propagation import propagate_tle as run_tle_propagation
 
 app = FastAPI(title="Orb Lab API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"^http://(localhost|127\.0\.0\.1):\d+$",
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["content-type"],
+)
 
 
 @app.get("/healthz")

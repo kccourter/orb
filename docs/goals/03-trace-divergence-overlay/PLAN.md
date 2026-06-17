@@ -588,6 +588,8 @@ Make the comparison behavior repeatable and document what Goal 04 can rely on.
 - Goal 03 docs state that Orekit refresh is manual.
 - Goal 04 README or plan notes mention any scene/sample APIs it can rely on.
 - Top-level `docs/goals/README.md` marks Goal 03 complete only after implementation and validation.
+- Completed during Increment 5: Goal 03 README now describes implemented behavior, `RECORD.md` captures the completion record, Goal 04 README includes handoff notes, and the top-level goals index marks Goal 03 complete.
+- Fixture coverage remains in frontend modules and is exercised through the existing frontend check/build/smoke path rather than a new test runner.
 
 ### Final Validation Matrix
 
@@ -606,6 +608,7 @@ Make the comparison behavior repeatable and document what Goal 04 can rely on.
 - `pnpm --dir apps/web smoke`
 - `uv run pytest`
 - Browser smoke test with API running.
+- Verified during Increment 5 with `CI=true pnpm --dir apps/web check`, `CI=true pnpm --dir apps/web build`, `CI=true pnpm --dir apps/web smoke`, and `uv run pytest`.
 
 ### Approval Question
 
