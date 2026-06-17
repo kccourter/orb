@@ -1,6 +1,7 @@
 import * as THREE from "three";
-import * as satellite from "satellite.js";
 
+import { ISS_TLE } from "./orbits/fixtures";
+import { sampleTleOrbit } from "./orbits/tle";
 import "./styles.css";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#scene");
@@ -47,44 +48,22 @@ const satelliteDot = new THREE.Mesh(
 );
 scene.add(satelliteDot);
 
-const tle = [
-  "1 25544U 98067A   24173.56347222  .00020137  00000+0  35155-3 0  9993",
-  "2 25544  51.6390 336.0970 0007833  50.2065  79.8843 15.50417852458913",
-] as const;
-
-const satrec = satellite.twoline2satrec(tle[0], tle[1]);
-const points = sampleTleOrbit(satrec, new Date(), 92.5, 180);
+const samples = sampleTleOrbit(ISS_TLE, {
+  epoch: new Date(),
+  durationMinutes: 92.5,
+  sampleCount: 180,
+});
+const points = samples.map(
+  (sample) =>
+    new THREE.Vector3(
+      sample.positionKm.x / 1000,
+      sample.positionKm.y / 1000,
+      sample.positionKm.z / 1000,
+    ),
+);
 orbit.geometry.setFromPoints(points);
 
 let frame = 0;
-
-function sampleTleOrbit(
-  sat: satellite.SatRec,
-  epoch: Date,
-  minutes: number,
-  count: number,
-): THREE.Vector3[] {
-  const vectors: THREE.Vector3[] = [];
-
-  for (let index = 0; index <= count; index += 1) {
-    const date = new Date(epoch.getTime() + (index / count) * minutes * 60_000);
-    const propagated = satellite.propagate(sat, date);
-
-    if (!propagated.position || typeof propagated.position === "boolean") {
-      continue;
-    }
-
-    vectors.push(
-      new THREE.Vector3(
-        propagated.position.x / 1000,
-        propagated.position.y / 1000,
-        propagated.position.z / 1000,
-      ),
-    );
-  }
-
-  return vectors;
-}
 
 function resize() {
   const width = window.innerWidth;
