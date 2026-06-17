@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 test("renders the orbit scene to a nonblank canvas", async ({ page }) => {
   await page.goto("/");
@@ -6,6 +6,33 @@ test("renders the orbit scene to a nonblank canvas", async ({ page }) => {
   const canvas = page.locator("#scene");
   await expect(canvas).toBeVisible();
 
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
+test("recomputes the orbit from sampling controls", async ({ page }) => {
+  await page.goto("/");
+
+  const epochInput = page.getByTestId("epoch-input");
+  const durationInput = page.getByTestId("duration-input");
+  const stepInput = page.getByTestId("step-input");
+  const resetButton = page.getByTestId("reset-settings");
+
+  await expect(epochInput).toHaveValue("2024-06-21T13:31:24Z");
+  await expect(durationInput).toHaveValue("92.5");
+  await expect(stepInput).toHaveValue("30");
+
+  await durationInput.fill("120");
+  await durationInput.blur();
+  await expect(durationInput).toHaveValue("120");
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+
+  await resetButton.click();
+  await expect(durationInput).toHaveValue("92.5");
+  await expect(stepInput).toHaveValue("30");
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
+async function countNonBlankCanvasPixels(page: Page): Promise<number> {
   const nonBlankPixels = await page.waitForFunction(() => {
     const scene = document.querySelector<HTMLCanvasElement>("#scene");
     const context = scene?.getContext("webgl2") ?? scene?.getContext("webgl");
@@ -45,5 +72,5 @@ test("renders the orbit scene to a nonblank canvas", async ({ page }) => {
     return nonBackgroundPixels;
   });
 
-  expect(await nonBlankPixels.jsonValue()).toBeGreaterThan(0);
-});
+  return nonBlankPixels.jsonValue();
+}

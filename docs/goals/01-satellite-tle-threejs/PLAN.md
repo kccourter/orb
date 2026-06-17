@@ -131,11 +131,44 @@ Make sampling reproducible and adjustable without turning the app into a full da
 
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
-- Manual browser test of sample settings.
+- `pnpm --dir apps/web smoke`
+- Manual browser test of sample settings if the in-app browser is available.
+
+### Implementation Plan
+
+1. Add orbit settings state.
+   - Create `apps/web/src/state/orbitSettings.ts` with a deterministic default epoch, duration, and step size.
+   - Use an ISO UTC string for the default epoch so reloads produce the same sampled trace.
+   - Derive sample count from `durationMinutes` and `stepSeconds`, with clamping for valid ranges.
+
+2. Add compact DOM controls.
+   - Create `apps/web/src/ui/controls.ts` for a small control surface over the canvas.
+   - Include epoch display/edit, reset-to-default epoch, duration minutes, and step seconds.
+   - Keep the UI plain DOM and CSS; do not introduce a component framework or dashboard layout.
+
+3. Recompute orbit samples on settings changes.
+   - Keep `main.ts` responsible for orchestration: current settings, TLE sampling, trace update, marker animation index reset.
+   - Reuse `sampleTleOrbit`, `orbitSamplesToScenePoints`, and `orbitScene.setOrbitPoints`.
+   - Clamp or reject invalid inputs predictably before sampling.
+
+4. Update styles.
+   - Add a compact fixed control bar or panel that does not obscure the main orbit view.
+   - Keep text and controls readable on narrow viewports without changing the scene layout.
+
+5. Extend smoke coverage where practical.
+   - Keep the existing nonblank canvas assertion.
+   - Add a lightweight Playwright interaction check that changing duration or step recomputes without blanking the scene.
+   - Avoid brittle visual assertions about exact pixel positions until the epoch and camera are fully frozen.
+
+6. Validate.
+   - Run `CI=true pnpm --dir apps/web check`.
+   - Run `CI=true pnpm --dir apps/web build`.
+   - Run `CI=true pnpm --dir apps/web smoke`.
+   - If the in-app browser is available, manually try reset epoch and sample-setting changes at desktop and narrow widths.
 
 ### Approval Question
 
-Approve the minimal control surface before adding validation notes.
+Approve the deterministic defaults and compact DOM control surface before implementation.
 
 ## Increment 4: Frontend Validation and Visual QA Notes
 

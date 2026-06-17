@@ -17,3 +17,88 @@ body {
   width: 100vw;
   height: 100vh;
 }
+
+.orbit-controls {
+  position: fixed;
+  inset: 16px auto auto 16px;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(2, minmax(92px, 0.5fr)) auto;
+  gap: 8px;
+  align-items: end;
+  width: min(calc(100vw - 32px), 720px);
+  padding: 10px;
+  box-sizing: border-box;
+  background: rgb(7 16 20 / 82%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.orbit-controls__field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.orbit-controls__field--number {
+  grid-template-columns: 1fr auto;
+}
+
+.orbit-controls__field--number .orbit-controls__label {
+  grid-column: 1 / -1;
+}
+
+.orbit-controls__label,
+.orbit-controls__suffix {
+  color: rgb(232 241 245 / 76%);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.orbit-controls__suffix {
+  align-self: center;
+}
+
+.orbit-controls__input,
+.orbit-controls__button {
+  min-height: 32px;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 8%);
+  color: #f3f8fa;
+  font: inherit;
+  font-size: 0.86rem;
+}
+
+.orbit-controls__input {
+  width: 100%;
+  min-width: 0;
+  padding: 0 8px;
+}
+
+.orbit-controls__button {
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.orbit-controls__input:focus,
+.orbit-controls__button:focus-visible {
+  outline: 2px solid #ffd166;
+  outline-offset: 2px;
+}
+
+.orbit-controls__button:hover {
+  background: rgb(255 255 255 / 14%);
+}
+
+@media (max-width: 680px) {
+  .orbit-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .orbit-controls__field--epoch {
+    grid-column: 1 / -1;
+  }
+}

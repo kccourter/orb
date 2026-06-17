@@ -2,6 +2,13 @@ import { ISS_TLE } from "./orbits/fixtures";
 import { sampleTleOrbit } from "./orbits/tle";
 import { createOrbitScene } from "./scene/createScene";
 import { orbitSamplesToScenePoints } from "./scene/orbitTrace";
+import {
+  DEFAULT_ORBIT_SETTINGS,
+  normalizeOrbitSettings,
+  toTlePropagationSettings,
+  type OrbitSettings,
+} from "./state/orbitSettings";
+import { createOrbitControls } from "./ui/controls";
 import "./styles.css";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#scene");
@@ -11,16 +18,34 @@ if (!canvas) {
 }
 
 const orbitScene = createOrbitScene(canvas);
+const controls = createOrbitControls(DEFAULT_ORBIT_SETTINGS, updateOrbit);
+document.body.append(controls.element);
 
-const samples = sampleTleOrbit(ISS_TLE, {
-  epoch: new Date(),
-  durationMinutes: 92.5,
-  sampleCount: 180,
-});
-const points = orbitSamplesToScenePoints(samples);
-orbitScene.setOrbitPoints(points);
-
+let points = recomputeOrbit(DEFAULT_ORBIT_SETTINGS);
 let frame = 0;
+
+function updateOrbit(settings: OrbitSettings) {
+  points = recomputeOrbit(settings);
+  frame = 0;
+}
+
+function recomputeOrbit(settings: OrbitSettings) {
+  const normalizedSettings = normalizeOrbitSettings(settings);
+  controls?.setSettings(normalizedSettings);
+
+  const samples = sampleTleOrbit(
+    ISS_TLE,
+    toTlePropagationSettings(normalizedSettings),
+  );
+  const nextPoints = orbitSamplesToScenePoints(samples);
+  orbitScene.setOrbitPoints(nextPoints);
+
+  if (nextPoints[0]) {
+    orbitScene.setSatellitePosition(nextPoints[0]);
+  }
+
+  return nextPoints;
+}
 
 function resize() {
   const width = window.innerWidth;
