@@ -44,6 +44,7 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - In Increment 2, those endpoints support the bundled ISS TLE example and submitted TLE text.
 - In Increment 3, those endpoints also support a bundled CCSDS OEM example and submitted OEM text when Orekit data is available.
 - In Increment 4, those endpoints also support a bundled hand-authored initial-state JSON example and submitted initial-state JSON.
+- In Increment 5, the frontend lists bundled examples, loads selected scenarios through the API, updates the active TLE preview when TLE data is present, and displays normalized sample-only scenarios without browser-side parsing.
 
 ## Dependencies
 

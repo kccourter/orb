@@ -136,9 +136,116 @@ body {
   outline-offset: 2px;
 }
 
-.orekit-overlay {
+.scenario-controls {
   position: fixed;
   inset: 128px auto auto 16px;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto minmax(0, 1.1fr);
+  gap: 8px;
+  align-items: center;
+  width: min(calc(100vw - 32px), 640px);
+  min-height: 40px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  background: rgb(7 16 20 / 82%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.scenario-controls__field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.scenario-controls__label,
+.scenario-controls__status {
+  color: rgb(232 241 245 / 76%);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.scenario-controls__select,
+.scenario-controls__button {
+  min-height: 30px;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 8%);
+  color: #f3f8fa;
+  font: inherit;
+  font-size: 0.84rem;
+}
+
+.scenario-controls__select {
+  min-width: 0;
+}
+
+.scenario-controls__button {
+  padding: 0 10px;
+  background: rgb(78 205 196 / 14%);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.scenario-controls__button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.scenario-controls__select:focus-visible,
+.scenario-controls__button:focus-visible {
+  outline: 2px solid #4ecdc4;
+  outline-offset: 2px;
+}
+
+.scenario-controls__button:not(:disabled):hover {
+  background: rgb(78 205 196 / 22%);
+}
+
+.scenario-controls__status {
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scenario-controls[data-status="error"] .scenario-controls__status {
+  color: #ffb4a8;
+}
+
+.scenario-controls[data-status="ready"] .scenario-controls__status {
+  color: #a6f4df;
+}
+
+.scenario-controls__metadata {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, auto));
+  gap: 4px 10px;
+  align-items: baseline;
+  margin: 0;
+  color: rgb(232 241 245 / 84%);
+  font-size: 0.72rem;
+}
+
+.scenario-controls__metadata dt,
+.scenario-controls__metadata dd {
+  margin: 0;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.scenario-controls__metadata dt {
+  color: rgb(232 241 245 / 56%);
+}
+
+.orekit-overlay {
+  position: fixed;
+  inset: 220px auto auto 16px;
   z-index: 10;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -270,11 +377,20 @@ body {
   }
 
   .orekit-overlay {
-    inset-block-start: 206px;
+    inset-block-start: 350px;
   }
 
   .frame-controls {
-    inset-block-start: 154px;
+    inset-block-start: 206px;
+  }
+
+  .scenario-controls {
+    inset-block-start: 258px;
+    grid-template-columns: 1fr auto;
+  }
+
+  .scenario-controls__status {
+    grid-column: 1 / -1;
   }
 }
 
@@ -290,6 +406,20 @@ body {
   .orekit-overlay {
     align-items: stretch;
     grid-template-columns: 1fr;
+    inset-block-start: 430px;
+  }
+
+  .scenario-controls {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .scenario-controls__status {
+    white-space: normal;
+  }
+
+  .scenario-controls__metadata {
+    grid-template-columns: repeat(2, minmax(0, auto));
   }
 
   .orekit-overlay__legend {

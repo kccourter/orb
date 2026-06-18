@@ -471,6 +471,9 @@ Expose scenario loading in the web app without making the browser parse every so
 
 - Prefer one excellent example-load path over a cluttered importer UI.
 - Keep controls compact; this remains an analysis tool, not a file-management app.
+- Implemented during Increment 5: added frontend scenario API client/types, active scenario state, compact example selector controls, TLE scenario handoff to local satellite.js/Orekit refresh, normalized sample display for OEM/manual scenarios, and scenario load error feedback.
+- The first UI pass intentionally supports bundled example selection only; paste/file submission remains deferred so parsing stays backend-owned without crowding the scene controls.
+- Sample-only scenarios display their normalized samples and leave Orekit refresh in a no-TLE state until a later propagation path exists.
 
 ### Validation
 
@@ -478,6 +481,7 @@ Expose scenario loading in the web app without making the browser parse every so
 - `CI=true pnpm --dir apps/web build`
 - `CI=true pnpm --dir apps/web smoke`
 - Manual browser scenario-load smoke test.
+- Verified during Increment 5 with `pnpm --dir apps/web check`, `pnpm --dir apps/web build`, `CI=true pnpm --dir apps/web smoke` (`6 passed`), and desktop/narrow Playwright screenshot checks against `http://127.0.0.1:5173/`.
 
 ### Approval Question
 
