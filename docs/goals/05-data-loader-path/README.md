@@ -42,6 +42,7 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Scenario frame origins are `geocentric` or `spacecraft`.
 - The first scenario endpoints are `/scenarios/examples`, `/scenarios/examples/{id}`, and `/scenarios/normalize`.
 - In Increment 2, those endpoints support the bundled ISS TLE example and submitted TLE text.
+- In Increment 3, those endpoints also support a bundled CCSDS OEM example and submitted OEM text when Orekit data is available.
 
 ## Dependencies
 
@@ -62,6 +63,7 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - A too-general schema can slow down the first useful loader.
 - Browser file handling can complicate validation if parsing responsibilities are split.
 - Arbitrary initial-state propagation may need a separate dynamics decision; Goal 05 can still normalize and display the source data.
+- The first OEM subset requires a single segment with a supported exact frame such as `EME2000`.
 
 ## Validation
 

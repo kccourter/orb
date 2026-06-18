@@ -318,6 +318,9 @@ Load CCSDS OEM data through Orekit where practical and normalize it for visualiz
 
 - If Orekit wrapper support is awkward, document a narrower first OEM subset instead of forcing broad CCSDS support.
 - Keep OEM parsing backend-only.
+- Implemented during Increment 3: added CCSDS OEM text normalization through Orekit, bundled `iss-oem` example loading, route support for OEM examples and submitted OEM text, and data-enabled parser/route tests.
+- The first OEM subset accepts exactly one segment, maps supported exact frames such as `EME2000`, preserves raw OEM text/object metadata, and normalizes samples to km and km/s.
+- OEM parsing requires `OREKIT_DATA_PATH`; missing data maps to `503` through the scenario routes.
 
 ### Validation
 
@@ -325,6 +328,7 @@ Load CCSDS OEM data through Orekit where practical and normalize it for visualiz
 - `uv run ruff check .`
 - Data-enabled pytest if required.
 - Manual load of the example OEM file.
+- Verified during Increment 3 with `uv run pytest` (`55 passed`, `11 skipped`), `uv run ruff check .`, and `UV_CACHE_DIR=/Users/kcourter/dev/orb/.uv-cache OREKIT_DATA_PATH=/Users/kcourter/dev/orb/orekit-data.zip uv run pytest` (`66 passed`).
 
 ### Approval Question
 

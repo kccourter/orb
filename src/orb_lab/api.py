@@ -96,6 +96,12 @@ def load_scenario_example(example_id: str) -> NormalizedScenario | JSONResponse:
     """Return a normalized bundled scenario example."""
     try:
         return get_example_scenario(example_id)
+    except OrekitRuntimeError as exc:
+        return _error_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="orekit_unavailable",
+            message=str(exc),
+        )
     except ScenarioLoadError as exc:
         return _error_response(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -120,6 +126,12 @@ def normalize_scenario(
     """Normalize submitted scenario source data."""
     try:
         return run_scenario_normalization(request)
+    except OrekitRuntimeError as exc:
+        return _error_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="orekit_unavailable",
+            message=str(exc),
+        )
     except ScenarioLoadError as exc:
         return _error_response(
             status_code=status.HTTP_400_BAD_REQUEST,
