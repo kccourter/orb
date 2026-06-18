@@ -12,6 +12,7 @@ export type OrekitOverlayStatus =
 export type OrekitOverlayControls = {
   element: HTMLElement;
   setStatus: (status: OrekitOverlayStatus) => void;
+  setLegend: (label: string) => void;
   setDivergenceSummary: (
     summary: DivergenceSummary | null,
     frame?: string,
@@ -62,6 +63,10 @@ export function createOrekitOverlayControls(
   return {
     element,
     setStatus,
+    setLegend(label) {
+      legend.textContent = label;
+      element.dataset.legend = label === "Orekit display" ? "orekit" : "compare";
+    },
     setDivergenceSummary,
   };
 

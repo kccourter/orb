@@ -4,6 +4,10 @@
 
 Add frame controls for ECI, ECEF, and a local orbital frame so users can inspect the same trajectory from different coordinate perspectives.
 
+## Status
+
+Completed on 2026-06-17. See [RECORD.md](RECORD.md) for implementation notes, validation, and Goal 05 handoff details.
+
 ## Why Fourth
 
 Frame switching turns the visualization from a pretty orbit viewer into a tool for reasoning about reference frames, ground-relative motion, and local motion.
@@ -18,11 +22,11 @@ Frame switching turns the visualization from a pretty orbit viewer into a tool f
 
 ## Proposed Increments
 
-1. Decide exact frame definitions and naming used in the API and frontend.
-2. Add frame selection state to the web app.
-3. Implement ECI/ECEF transform path or request strategy.
-4. Implement a first local orbital frame view.
-5. Add visual and numerical checks for transform correctness.
+1. Decide exact frame definitions and naming used in the API and frontend. Completed.
+2. Add frame selection state to the web app. Completed.
+3. Implement ECI/ECEF transform path or request strategy. Completed.
+4. Implement a first local orbital frame view. Completed.
+5. Add visual and numerical checks for transform correctness. Completed.
 
 See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 
@@ -30,7 +34,11 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 
 - Prefer Orekit for authoritative frame transforms.
 - Keep UI state separate from propagation settings; switching frames should not silently change the propagated trajectory.
-- Local orbital frame options may need a named convention such as QSW, TNW, or LVLH before implementation.
+- Use exact frame identifiers in API payloads; avoid bare `ECI` unless it is mapped to a documented frame such as `EME2000`.
+- Prefer `EME2000` for the first explicit inertial option, `ITRF` for the first Earth-fixed option, and a documented local orbital convention such as `QSW` for the first local option unless Increment 1 revises those names.
+- Keep `native`/`TEME` compatibility explicit so Goal 03 comparison behavior remains understandable.
+
+See [FRAMES.md](FRAMES.md) for the accepted Goal 04 frame vocabulary, UI labels, local QSW convention, and comparison policy.
 
 ## Dependencies
 
@@ -52,9 +60,20 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Local orbital frame conventions are easy to confuse without a strong naming policy.
 - Transforming dense traces may introduce performance pressure if done every animation frame.
 
+## Implemented Behavior
+
+- API frame values are `native`, `TEME`, `EME2000`, `ITRF`, and `QSW`.
+- The frontend defaults to `native` to preserve the Goal 03 comparison path.
+- `native` and explicit `TEME` support local/Orekit dual-trace divergence.
+- `EME2000`, `ITRF`, and `QSW` are Orekit display modes until a matching local transform exists.
+- QSW is spacecraft-centered and is not treated as a normal geocentric trace.
+
 ## Validation
 
 - `uv run pytest`
+- `uv run ruff check .`
 - `pnpm --dir apps/web check`
+- `pnpm --dir apps/web build`
+- `pnpm --dir apps/web smoke`
 - Manual browser verification for each frame mode.
 - Spot-check known positions or frame transforms against Orekit outputs.

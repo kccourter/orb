@@ -51,7 +51,10 @@ def test_propagate_tle_returns_goal_01_iss_samples() -> None:
     assert response.source.propagator == "orekit-tle"
     assert response.frame.authority == "orekit"
     assert response.frame.is_native is True
-    assert response.frame.name
+    assert response.frame.name == "TEME"
+    assert response.frame.requested == "native"
+    assert response.frame.source == "TEME"
+    assert response.frame.origin == "geocentric"
     assert response.units.position == "km"
     assert response.units.velocity == "km/s"
     assert response.sampling.sample_count == 186
@@ -75,6 +78,55 @@ def test_propagate_tle_returns_goal_01_iss_samples() -> None:
         for sample in response.samples
         for component in sample.velocity_km_s
     )
+
+
+@pytest.mark.skipif(
+    not os.environ.get("OREKIT_DATA_PATH"),
+    reason="OREKIT_DATA_PATH is required for live Orekit frame transforms.",
+)
+@pytest.mark.parametrize("frame", ["TEME", "EME2000", "ITRF"])
+def test_propagate_tle_returns_explicit_geocentric_frame_samples(frame: str) -> None:
+    request = TlePropagationRequest.model_validate(ISS_TLE_PAYLOAD | {"frame": frame})
+
+    response = propagate_tle(request)
+
+    assert response.frame.name == frame
+    assert response.frame.requested == frame
+    assert response.frame.source == "TEME"
+    assert response.frame.origin == "geocentric"
+    assert response.frame.is_native is False
+    assert response.sampling.sample_count == 186
+    assert len(response.samples) == response.sampling.sample_count
+
+    first = response.samples[0]
+    position_norm_km = sqrt(sum(component * component for component in first.position_km))
+    velocity_norm_km_s = sqrt(sum(component * component for component in first.velocity_km_s))
+
+    assert 6500 < position_norm_km < 7500
+    assert 7 < velocity_norm_km_s < 8
+    assert all(isfinite(component) for component in first.position_km)
+    assert all(isfinite(component) for component in first.velocity_km_s)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("OREKIT_DATA_PATH"),
+    reason="OREKIT_DATA_PATH is required for live Orekit frame transforms.",
+)
+def test_propagate_tle_returns_spacecraft_centered_qsw_samples() -> None:
+    request = TlePropagationRequest.model_validate(ISS_TLE_PAYLOAD | {"frame": "QSW"})
+
+    response = propagate_tle(request)
+
+    assert response.frame.name == "QSW"
+    assert response.frame.requested == "QSW"
+    assert response.frame.source == "TEME"
+    assert response.frame.origin == "spacecraft"
+    assert response.frame.is_native is False
+    assert response.sampling.sample_count == 186
+
+    first = response.samples[0]
+    assert first.position_km == pytest.approx((0.0, 0.0, 0.0), abs=1e-9)
+    assert first.velocity_km_s == pytest.approx((0.0, 0.0, 0.0), abs=1e-9)
 
 
 def test_validate_finite_vector_error_path() -> None:

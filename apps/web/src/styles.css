@@ -93,9 +93,52 @@ body {
   background: rgb(255 255 255 / 14%);
 }
 
-.orekit-overlay {
+.frame-controls {
   position: fixed;
   inset: 76px auto auto 16px;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: auto minmax(150px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: min(calc(100vw - 32px), 360px);
+  min-height: 40px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  background: rgb(7 16 20 / 82%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.frame-controls__label,
+.frame-controls__value {
+  color: rgb(232 241 245 / 76%);
+  font-size: 0.72rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.frame-controls__select {
+  min-width: 0;
+  min-height: 30px;
+  box-sizing: border-box;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 8%);
+  color: #f3f8fa;
+  font: inherit;
+  font-size: 0.84rem;
+}
+
+.frame-controls__select:focus-visible {
+  outline: 2px solid #4ecdc4;
+  outline-offset: 2px;
+}
+
+.orekit-overlay {
+  position: fixed;
+  inset: 128px auto auto 16px;
   z-index: 10;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -179,6 +222,10 @@ body {
   background: #4ecdc4;
 }
 
+.orekit-overlay[data-legend="orekit"] .orekit-overlay__legend::before {
+  display: none;
+}
+
 .orekit-overlay__metrics {
   grid-column: 1 / -1;
   display: grid;
@@ -223,11 +270,23 @@ body {
   }
 
   .orekit-overlay {
+    inset-block-start: 206px;
+  }
+
+  .frame-controls {
     inset-block-start: 154px;
   }
 }
 
 @media (max-width: 420px) {
+  .frame-controls {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .frame-controls__value {
+    display: none;
+  }
+
   .orekit-overlay {
     align-items: stretch;
     grid-template-columns: 1fr;

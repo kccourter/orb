@@ -36,7 +36,11 @@ def test_propagate_tle_route_returns_adapter_response(
     def fake_propagate(request: TlePropagationRequest) -> TlePropagationResponse:
         return TlePropagationResponse(
             source=SourceMetadata(name=request.tle.name),
-            frame=FrameMetadata(name="TEME"),
+            frame=FrameMetadata(
+                name="TEME",
+                requested=request.frame,
+                source="TEME",
+            ),
             sampling=SamplingMetadata(
                 start_epoch=request.sampling.start_epoch,
                 duration_minutes=request.sampling.duration_minutes,
@@ -61,6 +65,9 @@ def test_propagate_tle_route_returns_adapter_response(
     body = response.json()
     assert body["source"]["name"] == "ISS (ZARYA)"
     assert body["frame"]["name"] == "TEME"
+    assert body["frame"]["requested"] == "native"
+    assert body["frame"]["source"] == "TEME"
+    assert body["frame"]["origin"] == "geocentric"
     assert body["units"] == {"position": "km", "velocity": "km/s"}
     assert body["sampling"]["sample_count"] == 1
     assert body["samples"][0]["position_km"] == [1.0, 2.0, 3.0]

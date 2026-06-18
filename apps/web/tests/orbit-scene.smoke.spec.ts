@@ -81,6 +81,8 @@ test("requests Orekit samples from the manual refresh control", async ({ page })
 
   await page.goto("/");
 
+  await expect(page.getByTestId("frame-select")).toHaveValue("native");
+  await expect(page.getByTestId("selected-frame-label")).toHaveText("Native");
   await expect(page.getByTestId("orekit-status")).toHaveText("Orekit idle");
   await expect(page.getByTestId("orekit-legend")).toHaveText("Local / Orekit");
   await page.getByTestId("refresh-orekit").click();
@@ -89,6 +91,88 @@ test("requests Orekit samples from the manual refresh control", async ({ page })
   );
   await expect(page.getByTestId("divergence-readout")).toContainText("Max");
   await expect(page.getByTestId("divergence-readout")).toContainText("Aligned");
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
+test("sends selected propagation frame and clears stale Orekit state", async ({
+  page,
+}) => {
+  const requestedFrames: string[] = [];
+
+  await page.route("http://127.0.0.1:8000/propagate/tle", async (route) => {
+    const request = route.request();
+    const payload = request.postDataJSON();
+    requestedFrames.push(payload.frame);
+
+    await route.fulfill({
+      contentType: "application/json",
+      json: {
+        source: {
+          type: "tle",
+          name: "ISS (ZARYA)",
+          propagator: "orekit-tle",
+        },
+        frame: {
+          name: payload.frame === "native" ? "TEME" : payload.frame,
+          authority: "orekit",
+          is_native: payload.frame === "native",
+          requested: payload.frame,
+          source: "TEME",
+          origin: payload.frame === "QSW" ? "spacecraft" : "geocentric",
+        },
+        units: {
+          position: "km",
+          velocity: "km/s",
+        },
+        sampling: {
+          start_epoch: "2024-06-21T13:31:24Z",
+          duration_minutes: 92.5,
+          step_seconds: 30,
+          sample_count: 2,
+        },
+        samples: [
+          {
+            epoch: "2024-06-21T13:31:24Z",
+            position_km: [1, 2, 3],
+            velocity_km_s: [4, 5, 6],
+          },
+          {
+            epoch: "2024-06-21T13:31:54Z",
+            position_km: [2, 3, 4],
+            velocity_km_s: [5, 6, 7],
+          },
+        ],
+      },
+    });
+  });
+
+  await page.goto("/");
+
+  await page.getByTestId("refresh-orekit").click();
+  await expect(page.getByTestId("orekit-status")).toHaveText(
+    "Orekit TEME: 2 samples",
+  );
+  await expect(page.getByTestId("divergence-readout")).toContainText("Max");
+
+  await page.getByTestId("frame-select").selectOption("EME2000");
+  await expect(page.getByTestId("selected-frame-label")).toHaveText(
+    "ECI (EME2000)",
+  );
+  await expect(page.getByTestId("orekit-status")).toHaveText(
+    "Refresh ECI (EME2000)",
+  );
+  await expect(page.getByTestId("divergence-readout")).toContainText("Frame--");
+
+  await page.getByTestId("refresh-orekit").click();
+  await expect(page.getByTestId("orekit-status")).toHaveText(
+    "Orekit EME2000: 2 samples",
+  );
+  await expect(page.getByTestId("orekit-legend")).toHaveText("Orekit display");
+  await expect(page.getByTestId("divergence-readout")).toContainText(
+    "FrameEME2000",
+  );
+
+  expect(requestedFrames).toEqual(["native", "EME2000"]);
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 

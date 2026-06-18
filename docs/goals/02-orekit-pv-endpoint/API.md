@@ -38,7 +38,9 @@ The local `orekit-data.zip` and `orekit-data/` paths are ignored by git.
 }
 ```
 
-`frame` currently accepts only `native`. For Orekit TLE propagation, the native frame returned for the ISS fixture is `TEME`.
+`frame` accepts `native`, `TEME`, `EME2000`, `ITRF`, and `QSW`.
+
+For Orekit TLE propagation, the native frame returned for the ISS fixture is `TEME`. Goal 04 frame semantics are documented in [Goal 04 FRAMES.md](../04-frame-controls/FRAMES.md).
 
 ## Response
 
@@ -52,7 +54,10 @@ The local `orekit-data.zip` and `orekit-data/` paths are ignored by git.
   "frame": {
     "name": "TEME",
     "authority": "orekit",
-    "is_native": true
+    "is_native": true,
+    "requested": "native",
+    "source": "TEME",
+    "origin": "geocentric"
   },
   "units": {
     "position": "km",
@@ -75,6 +80,16 @@ The local `orekit-data.zip` and `orekit-data/` paths are ignored by git.
 ```
 
 Sampling is inclusive: `floor(duration_seconds / step_seconds) + 1`. The Goal 01 defaults produce 186 Orekit samples.
+
+Frame metadata:
+
+- `name`: realized output frame name.
+- `requested`: requested frame value.
+- `source`: source/native propagation frame before transform.
+- `origin`: `geocentric` for `native`, `TEME`, `EME2000`, and `ITRF`; `spacecraft` for `QSW`.
+- `is_native`: `true` only when output is the propagator native frame without an explicit transform.
+
+`QSW` samples are spacecraft-centered. For the propagated object itself, position and velocity samples are therefore expected to be near zero in that local frame.
 
 ## Errors
 

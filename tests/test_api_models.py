@@ -36,6 +36,15 @@ def test_tle_propagation_request_accepts_goal_01_defaults() -> None:
     assert request.frame == "native"
 
 
+@pytest.mark.parametrize("frame", ["native", "TEME", "EME2000", "ITRF", "QSW"])
+def test_tle_propagation_request_accepts_goal_04_frames(frame: str) -> None:
+    payload = ISS_TLE_PAYLOAD | {"frame": frame}
+
+    request = TlePropagationRequest.model_validate(payload)
+
+    assert request.frame == frame
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [
@@ -84,9 +93,9 @@ def test_tle_propagation_request_rejects_naive_epoch() -> None:
         TlePropagationRequest.model_validate(payload)
 
 
-def test_propagate_tle_route_rejects_invalid_payload_before_adapter() -> None:
+def test_propagate_tle_route_rejects_unknown_frame_before_adapter() -> None:
     client = TestClient(app)
-    payload = ISS_TLE_PAYLOAD | {"frame": "EME2000"}
+    payload = ISS_TLE_PAYLOAD | {"frame": "ECI"}
 
     response = client.post("/propagate/tle", json=payload)
 
