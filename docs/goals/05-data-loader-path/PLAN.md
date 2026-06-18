@@ -388,12 +388,16 @@ Allow users to define a scenario from explicit epoch, frame, position, velocity,
 ### Increment Completion Notes
 
 - Keep this path useful for hand-authored fixtures even if full initial-state propagation is deferred.
+- Implemented during Increment 4: added hand-authored initial-state JSON normalization, bundled `manual-initial-state` example loading, route support for submitted initial-state JSON, and parser/route regression tests.
+- The first initial-state subset accepts exact Goal 04 frames, timezone-aware epochs, geocentric or spacecraft origin metadata, direct `positionKm`/`velocityKmS` vectors, or generic `position`/`velocity` vectors with `km`/`km/s` or `m`/`m/s` units.
+- Initial-state scenarios normalize to one display-ready `initial_state` plus a single sample; arbitrary-state propagation remains deferred.
 
 ### Validation
 
 - `uv run pytest`
 - `uv run ruff check .`
 - Manual load of the example JSON file.
+- Verified during Increment 4 with `uv run pytest` (`67 passed`, `11 skipped`), `uv run ruff check .`, and `UV_CACHE_DIR=/Users/kcourter/dev/orb/.uv-cache OREKIT_DATA_PATH=/Users/kcourter/dev/orb/orekit-data.zip uv run pytest` (`78 passed`).
 
 ### Approval Question
 

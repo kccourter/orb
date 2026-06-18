@@ -43,6 +43,7 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - The first scenario endpoints are `/scenarios/examples`, `/scenarios/examples/{id}`, and `/scenarios/normalize`.
 - In Increment 2, those endpoints support the bundled ISS TLE example and submitted TLE text.
 - In Increment 3, those endpoints also support a bundled CCSDS OEM example and submitted OEM text when Orekit data is available.
+- In Increment 4, those endpoints also support a bundled hand-authored initial-state JSON example and submitted initial-state JSON.
 
 ## Dependencies
 
@@ -64,6 +65,7 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Browser file handling can complicate validation if parsing responsibilities are split.
 - Arbitrary initial-state propagation may need a separate dynamics decision; Goal 05 can still normalize and display the source data.
 - The first OEM subset requires a single segment with a supported exact frame such as `EME2000`.
+- The first initial-state subset is display-ready only; propagation from arbitrary states remains a later dynamics decision.
 
 ## Validation
 

@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+
+from pydantic import ValidationError
 
 from orb_lab.models import (
     NormalizedScenario,
     ScenarioExampleSummary,
     ScenarioFrame,
     ScenarioFrameMetadata,
+    ScenarioInitialStateInput,
     ScenarioNormalizeRequest,
     ScenarioSourceMetadata,
     ScenarioStateVector,
@@ -20,6 +24,7 @@ from orb_lab.orekit_runtime import ensure_orekit_data
 EXAMPLES_DIR = Path(__file__).resolve().parents[2] / "examples" / "scenarios"
 ISS_EXAMPLE_ID = "iss-tle"
 ISS_OEM_EXAMPLE_ID = "iss-oem"
+MANUAL_INITIAL_STATE_EXAMPLE_ID = "manual-initial-state"
 M_TO_KM = 1.0 / 1000.0
 
 
@@ -44,6 +49,13 @@ def list_example_scenarios() -> list[ScenarioExampleSummary]:
             format="ccsds-oem",
             frame="EME2000",
         ),
+        ScenarioExampleSummary(
+            id=MANUAL_INITIAL_STATE_EXAMPLE_ID,
+            name="Manual EME2000 state",
+            source_type="initial_state",
+            format="json",
+            frame="EME2000",
+        ),
     ]
 
 
@@ -58,6 +70,12 @@ def load_example_scenario(example_id: str) -> NormalizedScenario:
             scenario_id=ISS_OEM_EXAMPLE_ID,
         )
 
+    if example_id == MANUAL_INITIAL_STATE_EXAMPLE_ID:
+        return normalize_initial_state_text(
+            _read_example_text("manual-initial-state.json"),
+            scenario_id=MANUAL_INITIAL_STATE_EXAMPLE_ID,
+        )
+
     msg = f"Unknown scenario example: {example_id}"
     raise ScenarioLoadError(msg)
 
@@ -69,6 +87,9 @@ def normalize_scenario(request: ScenarioNormalizeRequest) -> NormalizedScenario:
 
     if request.source_type == "oem_ccsds":
         return normalize_oem_text(request.text, name=request.name)
+
+    if request.source_type == "initial_state":
+        return normalize_initial_state_text(request.text, name=request.name)
 
     msg = f"Unsupported scenario source type: {request.source_type}"
     raise ScenarioLoadError(msg)
@@ -206,6 +227,55 @@ def normalize_oem_text(
     )
 
 
+def normalize_initial_state_text(
+    text: str,
+    *,
+    name: str | None = None,
+    scenario_id: str | None = None,
+) -> NormalizedScenario:
+    """Normalize a hand-authored initial-state JSON document."""
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as exc:
+        msg = "Initial-state scenario text must be valid JSON."
+        raise ScenarioLoadError(msg) from exc
+
+    if not isinstance(payload, dict):
+        msg = "Initial-state scenario JSON must be an object."
+        raise ScenarioLoadError(msg)
+
+    try:
+        initial_state = ScenarioInitialStateInput.model_validate(payload)
+    except ValidationError as exc:
+        msg = "Invalid initial-state scenario JSON."
+        raise ScenarioLoadError(msg) from exc
+
+    state = ScenarioStateVector(
+        epoch=initial_state.epoch,
+        position_km=_initial_position_km(initial_state),
+        velocity_km_s=_initial_velocity_km_s(initial_state),
+    )
+    scenario_name = name or initial_state.name or "Manual initial state"
+
+    return NormalizedScenario(
+        id=scenario_id,
+        name=scenario_name,
+        source=ScenarioSourceMetadata(
+            type="initial_state",
+            format="json",
+            object_id=initial_state.object_id,
+            raw=json.dumps(payload, indent=2, sort_keys=True),
+        ),
+        frame=ScenarioFrameMetadata(
+            name=initial_state.frame,
+            origin=initial_state.origin,
+        ),
+        epoch=state.epoch,
+        initial_state=state,
+        samples=[state],
+    )
+
+
 def _read_example_text(filename: str) -> str:
     path = EXAMPLES_DIR / filename
 
@@ -239,6 +309,48 @@ def _vector_to_km_tuple(vector: object) -> tuple[float, float, float]:
         float(vector.getX()) * M_TO_KM,
         float(vector.getY()) * M_TO_KM,
         float(vector.getZ()) * M_TO_KM,
+    )
+
+
+def _initial_position_km(
+    initial_state: ScenarioInitialStateInput,
+) -> tuple[float, float, float]:
+    if initial_state.position_km is not None:
+        return initial_state.position_km
+
+    if initial_state.position_m is not None:
+        return _scale_tuple(initial_state.position_m, M_TO_KM)
+
+    if initial_state.position is not None:
+        factor = M_TO_KM if initial_state.units.position == "m" else 1.0
+        return _scale_tuple(initial_state.position, factor)
+
+    msg = "Initial-state scenario is missing a position vector."
+    raise ScenarioLoadError(msg)
+
+
+def _initial_velocity_km_s(
+    initial_state: ScenarioInitialStateInput,
+) -> tuple[float, float, float]:
+    if initial_state.velocity_km_s is not None:
+        return initial_state.velocity_km_s
+
+    if initial_state.velocity_m_s is not None:
+        return _scale_tuple(initial_state.velocity_m_s, M_TO_KM)
+
+    if initial_state.velocity is not None:
+        factor = M_TO_KM if initial_state.units.velocity == "m/s" else 1.0
+        return _scale_tuple(initial_state.velocity, factor)
+
+    msg = "Initial-state scenario is missing a velocity vector."
+    raise ScenarioLoadError(msg)
+
+
+def _scale_tuple(vector: tuple[float, float, float], factor: float) -> tuple[float, float, float]:
+    return (
+        vector[0] * factor,
+        vector[1] * factor,
+        vector[2] * factor,
     )
 
 

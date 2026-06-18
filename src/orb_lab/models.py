@@ -3,13 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Vector3 = tuple[float, float, float]
 PropagationFrameRequest = Literal["native", "TEME", "EME2000", "ITRF", "QSW"]
 ScenarioFrame = Literal["TEME", "EME2000", "ITRF", "QSW"]
 ScenarioSourceType = Literal["tle", "oem_ccsds", "initial_state"]
 FrameOrigin = Literal["geocentric", "spacecraft"]
+InputPositionUnit = Literal["km", "m"]
+InputVelocityUnit = Literal["km/s", "m/s"]
 
 
 class TleInput(BaseModel):
@@ -141,6 +143,64 @@ class ScenarioStateVector(BaseModel):
             msg = "epoch must include a UTC offset."
             raise ValueError(msg)
         return epoch
+
+
+class ScenarioInitialStateUnits(BaseModel):
+    position: InputPositionUnit = "km"
+    velocity: InputVelocityUnit = "km/s"
+
+
+class ScenarioInitialStateInput(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    object_id: str | None = Field(
+        default=None,
+        alias="objectId",
+        min_length=1,
+        max_length=120,
+    )
+    epoch: datetime
+    frame: ScenarioFrame
+    origin: FrameOrigin = "geocentric"
+    units: ScenarioInitialStateUnits = Field(default_factory=ScenarioInitialStateUnits)
+    position: Vector3 | None = None
+    velocity: Vector3 | None = None
+    position_km: Vector3 | None = Field(default=None, alias="positionKm")
+    velocity_km_s: Vector3 | None = Field(default=None, alias="velocityKmS")
+    position_m: Vector3 | None = Field(default=None, alias="positionM")
+    velocity_m_s: Vector3 | None = Field(default=None, alias="velocityMS")
+
+    @field_validator("epoch")
+    @classmethod
+    def require_timezone(cls, epoch: datetime) -> datetime:
+        if epoch.tzinfo is None or epoch.utcoffset() is None:
+            msg = "epoch must include a UTC offset."
+            raise ValueError(msg)
+        return epoch
+
+    @model_validator(mode="after")
+    def require_one_position_and_velocity(self) -> ScenarioInitialStateInput:
+        position_fields = [
+            self.position is not None,
+            self.position_km is not None,
+            self.position_m is not None,
+        ]
+        velocity_fields = [
+            self.velocity is not None,
+            self.velocity_km_s is not None,
+            self.velocity_m_s is not None,
+        ]
+
+        if sum(position_fields) != 1:
+            msg = "Initial-state scenarios must provide exactly one position vector."
+            raise ValueError(msg)
+
+        if sum(velocity_fields) != 1:
+            msg = "Initial-state scenarios must provide exactly one velocity vector."
+            raise ValueError(msg)
+
+        return self
 
 
 class NormalizedScenario(BaseModel):
