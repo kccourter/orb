@@ -164,8 +164,12 @@ test("sends selected propagation frame and clears stale Orekit state", async ({
   await expect(page.getByTestId("divergence-readout")).toContainText("Frame--");
 
   await page.getByTestId("refresh-orekit").click();
-  await expect(page.getByTestId("orekit-status")).toContainText(
-    "Cannot compare TEME with EME2000.",
+  await expect(page.getByTestId("orekit-status")).toHaveText(
+    "Orekit EME2000: 2 samples",
+  );
+  await expect(page.getByTestId("orekit-legend")).toHaveText("Orekit display");
+  await expect(page.getByTestId("divergence-readout")).toContainText(
+    "FrameEME2000",
   );
 
   expect(requestedFrames).toEqual(["native", "EME2000"]);

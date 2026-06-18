@@ -222,6 +222,10 @@ body {
   background: #4ecdc4;
 }
 
+.orekit-overlay[data-legend="orekit"] .orekit-overlay__legend::before {
+  display: none;
+}
+
 .orekit-overlay__metrics {
   grid-column: 1 / -1;
   display: grid;

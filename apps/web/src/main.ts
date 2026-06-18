@@ -64,12 +64,15 @@ let orekitSamples: OrekitOrbitSample[] = [];
 let sampleAlignment: SampleAlignment | null = null;
 let divergenceSeries: DivergenceSeries | null = null;
 let orekitRequestId = 0;
-let points = recomputeOrbit(currentSettings);
+let localPoints = recomputeOrbit(currentSettings);
+let displayPoints = localPoints;
+let displayEpochs = localSamples.map((sample) => sample.epoch);
 let frame = 0;
 
 function updateOrbit(settings: OrbitSettings) {
   currentSettings = normalizeOrbitSettings(settings);
-  points = recomputeOrbit(currentSettings);
+  localPoints = recomputeOrbit(currentSettings);
+  showLocalDisplay();
   clearOrekitComparison("Refresh Orekit");
   frame = 0;
 }
@@ -122,14 +125,28 @@ async function refreshOrekitSamples() {
   }
 
   orekitSamples = result.response.samples;
+  const comparableOrekitSamples = orekitSamples.map(orekitSampleToComparable);
   const alignmentResult = alignOrbitSamples(
     localSamples.map(satelliteJsSampleToComparable),
-    orekitSamples.map(orekitSampleToComparable),
+    comparableOrekitSamples,
   );
 
   if (!alignmentResult.ok) {
     sampleAlignment = null;
     divergenceSeries = null;
+
+    if (alignmentResult.error.code === "frame_mismatch") {
+      showOrekitDisplayMode(comparableOrekitSamples);
+      orekitControls.setStatus({
+        status: "ready",
+        sampleCount: orekitSamples.length,
+        frame: result.response.frame.name,
+      });
+      orekitControls.setLegend("Orekit display");
+      orekitControls.setDivergenceSummary(null, result.response.frame.name);
+      return;
+    }
+
     orekitControls.setStatus({
       status: "error",
       message: alignmentResult.error.message,
@@ -140,6 +157,7 @@ async function refreshOrekitSamples() {
 
   sampleAlignment = alignmentResult.alignment;
   divergenceSeries = computeDivergenceSeries(sampleAlignment);
+  showComparableDisplay();
   orbitScene.setTracePoints(
     "orekit",
     comparableSamplesToScenePoints(
@@ -151,7 +169,8 @@ async function refreshOrekitSamples() {
     sampleCount: orekitSamples.length,
     frame: result.response.frame.name,
   });
-  updateDivergenceReadout(localSamples[frame]?.epoch);
+  orekitControls.setLegend("Local / Orekit");
+  updateDivergenceReadout(displayEpochs[frame]);
 }
 
 function clearOrekitComparison(message: string) {
@@ -159,12 +178,43 @@ function clearOrekitComparison(message: string) {
   orekitSamples = [];
   sampleAlignment = null;
   divergenceSeries = null;
+  showLocalDisplay();
   orbitScene.clearTrace("orekit");
   orekitControls.setStatus({
     status: "idle",
     message,
   });
+  orekitControls.setLegend("Local / Orekit");
   orekitControls.setDivergenceSummary(null);
+}
+
+function showLocalDisplay() {
+  orbitScene.setOrbitPoints(localPoints);
+  displayPoints = localPoints;
+  displayEpochs = localSamples.map((sample) => sample.epoch);
+
+  if (displayPoints[0]) {
+    orbitScene.setSatellitePosition(displayPoints[0]);
+  }
+}
+
+function showComparableDisplay() {
+  showLocalDisplay();
+}
+
+function showOrekitDisplayMode(
+  comparableOrekitSamples: ReturnType<typeof orekitSampleToComparable>[],
+) {
+  const orekitPoints = comparableSamplesToScenePoints(comparableOrekitSamples);
+  orbitScene.clearTrace("satellite-js");
+  orbitScene.setTracePoints("orekit", orekitPoints);
+  displayPoints = orekitPoints;
+  displayEpochs = orekitSamples.map((sample) => sample.epoch);
+  frame = 0;
+
+  if (displayPoints[0]) {
+    orbitScene.setSatellitePosition(displayPoints[0]);
+  }
 }
 
 function resize() {
@@ -176,12 +226,12 @@ function resize() {
 function animate() {
   requestAnimationFrame(animate);
 
-  frame = (frame + 1) % Math.max(points.length, 1);
-  const point = points[frame];
+  frame = (frame + 1) % Math.max(displayPoints.length, 1);
+  const point = displayPoints[frame];
   if (point) {
     orbitScene.setSatellitePosition(point);
   }
-  updateDivergenceReadout(localSamples[frame]?.epoch);
+  updateDivergenceReadout(displayEpochs[frame]);
 
   orbitScene.rotateEarth();
   orbitScene.render();

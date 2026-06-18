@@ -487,6 +487,10 @@ Increment 4 should implement the policy approved after Increments 1-3, not inven
 - This increment should prioritize analytic correctness over always showing two traces.
 - If a frame is display-only in Goal 04, document that in status/readout and the completion record.
 - Keep Three.js scene APIs source-agnostic enough for Goal 05 data scenarios.
+- Implemented during Increment 4: comparable `native`/`TEME` responses preserve dual-trace rendering and divergence metrics; transformed-frame responses render as Orekit display mode with Orekit trace and marker ownership.
+- In Orekit display mode, the local `TEME` trace is cleared, the legend switches to Orekit-only, and divergence metrics are frame-labeled but unavailable.
+- Marker animation now follows the currently displayed sample set rather than always following local `satellite.js` samples.
+- Selected-frame rendering for `QSW` follows the Increment 1 policy by treating it as spacecraft-centered Orekit display data, not a geocentric comparison trace.
 
 ### Validation
 
@@ -494,6 +498,7 @@ Increment 4 should implement the policy approved after Increments 1-3, not inven
 - `CI=true pnpm --dir apps/web build`
 - `CI=true pnpm --dir apps/web smoke`
 - Manual browser verification for all frame modes at desktop and narrow widths.
+- Verified during Increment 4 with `CI=true pnpm --dir apps/web check`, `CI=true pnpm --dir apps/web build`, and `CI=true pnpm --dir apps/web smoke`.
 
 ### Approval Question
 
