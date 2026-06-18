@@ -2,9 +2,9 @@
 
 ## Status
 
-Accepted for Goal 04 implementation planning on 2026-06-17.
+Implemented for Goal 04 on 2026-06-17.
 
-This document defines the frame vocabulary for Goal 04 before runtime changes. The current implemented API still accepts only `frame: "native"` until Goal 04 Increment 2 extends the backend.
+This document defines the frame vocabulary used by the Goal 04 API and frontend frame controls.
 
 ## Principles
 
@@ -79,8 +79,14 @@ The initial frontend selected frame should remain `native` for compatibility and
 - Do not compare samples by index; continue using epoch alignment.
 - Do not interpolate in Goal 04 unless a later increment explicitly changes this policy.
 
+## Implemented Display Policy
+
+- `native` and explicit `TEME` preserve the Goal 03 dual-trace comparison path.
+- `EME2000`, `ITRF`, and `QSW` render as Orekit display modes.
+- In Orekit display mode, the local `TEME` trace is cleared, the Orekit trace and marker use returned Orekit samples, and divergence metrics are unavailable.
+- QSW is spacecraft-centered; it is not rendered as a geocentric comparison trace.
+
 ## Open Implementation Notes
 
-- Increment 2 should confirm the exact Orekit API calls for `TEME`, `EME2000`, `ITRF`, and QSW construction.
-- Increment 4 should decide whether Earth rotation pauses in `ITRF` display or whether the transformed trace alone communicates Earth-fixed behavior.
-- Increment 4 should decide whether QSW is rendered as axes, a local relative path, or both.
+- Earth rotation is not paused in `ITRF` display in Goal 04.
+- QSW is rendered as spacecraft-centered Orekit display data without an additional axes overlay in Goal 04.

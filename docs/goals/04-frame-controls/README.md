@@ -4,6 +4,10 @@
 
 Add frame controls for ECI, ECEF, and a local orbital frame so users can inspect the same trajectory from different coordinate perspectives.
 
+## Status
+
+Completed on 2026-06-17. See [RECORD.md](RECORD.md) for implementation notes, validation, and Goal 05 handoff details.
+
 ## Why Fourth
 
 Frame switching turns the visualization from a pretty orbit viewer into a tool for reasoning about reference frames, ground-relative motion, and local motion.
@@ -18,11 +22,11 @@ Frame switching turns the visualization from a pretty orbit viewer into a tool f
 
 ## Proposed Increments
 
-1. Decide exact frame definitions and naming used in the API and frontend.
-2. Add frame selection state to the web app.
-3. Implement ECI/ECEF transform path or request strategy.
-4. Implement a first local orbital frame view.
-5. Add visual and numerical checks for transform correctness.
+1. Decide exact frame definitions and naming used in the API and frontend. Completed.
+2. Add frame selection state to the web app. Completed.
+3. Implement ECI/ECEF transform path or request strategy. Completed.
+4. Implement a first local orbital frame view. Completed.
+5. Add visual and numerical checks for transform correctness. Completed.
 
 See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 
@@ -56,9 +60,20 @@ See [FRAMES.md](FRAMES.md) for the accepted Goal 04 frame vocabulary, UI labels,
 - Local orbital frame conventions are easy to confuse without a strong naming policy.
 - Transforming dense traces may introduce performance pressure if done every animation frame.
 
+## Implemented Behavior
+
+- API frame values are `native`, `TEME`, `EME2000`, `ITRF`, and `QSW`.
+- The frontend defaults to `native` to preserve the Goal 03 comparison path.
+- `native` and explicit `TEME` support local/Orekit dual-trace divergence.
+- `EME2000`, `ITRF`, and `QSW` are Orekit display modes until a matching local transform exists.
+- QSW is spacecraft-centered and is not treated as a normal geocentric trace.
+
 ## Validation
 
 - `uv run pytest`
+- `uv run ruff check .`
 - `pnpm --dir apps/web check`
+- `pnpm --dir apps/web build`
+- `pnpm --dir apps/web smoke`
 - Manual browser verification for each frame mode.
 - Spot-check known positions or frame transforms against Orekit outputs.

@@ -39,6 +39,13 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Goal 03 frontend API client patterns.
 - Goal 04 frame naming and transform policy.
 
+## Goal 04 Handoff Notes
+
+- Scenario frame metadata should use exact frame identifiers: `TEME`, `EME2000`, `ITRF`, or `QSW`.
+- `native` is a propagation request compatibility mode, not a scenario source frame.
+- Preserve frame origin metadata where it matters; QSW is spacecraft-centered, while TEME/EME2000/ITRF are geocentric in Goal 04.
+- Avoid broad frame names such as `ECI` and `ECEF` unless the loader maps them to exact supported frames.
+
 ## Risks
 
 - OEM/CCSDS support may require Orekit data and time-scale setup earlier than simpler TLE demos.

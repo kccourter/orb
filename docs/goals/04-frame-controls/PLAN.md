@@ -601,6 +601,8 @@ Add confidence checks and document remaining frame limitations for Goal 05.
 
 - This increment closes Goal 04 only after validation and docs agree with implemented behavior.
 - Do not mark Goal 04 complete if any approved frame mode is only partially wired without documentation.
+- Implemented during Increment 5: added frame-state fixture checks, updated Goal 04 README/FRAMES docs to completed state, created `RECORD.md`, added Goal 05 handoff notes, and marked Goal 04 complete in the top-level goals index.
+- Goal 04 completion record captures supported frames, rendering/metrics policy, validation, Goal 05 handoff, and known risks.
 
 ### Validation
 
@@ -610,6 +612,7 @@ Add confidence checks and document remaining frame limitations for Goal 05.
 - `CI=true pnpm --dir apps/web build`
 - `CI=true pnpm --dir apps/web smoke`
 - Manual browser smoke test for all supported frame modes with the API running.
+- Verified during Increment 5 with backend, frontend, and data-enabled validation commands recorded in `RECORD.md`.
 
 ### Approval Question
 
