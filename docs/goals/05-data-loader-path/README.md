@@ -32,6 +32,8 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Keep raw source parsing on the Python side when Orekit provides robust support.
 - Normalize early: the rest of the app should consume one scenario/propagation request shape.
 - Preserve original source metadata for traceability and debugging.
+- Treat `native` as a propagation request mode, not a scenario frame.
+- Prefer bundled examples and backend normalization before adding broad browser file parsing.
 
 ## Dependencies
 
@@ -51,6 +53,7 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - OEM/CCSDS support may require Orekit data and time-scale setup earlier than simpler TLE demos.
 - A too-general schema can slow down the first useful loader.
 - Browser file handling can complicate validation if parsing responsibilities are split.
+- Arbitrary initial-state propagation may need a separate dynamics decision; Goal 05 can still normalize and display the source data.
 
 ## Validation
 
