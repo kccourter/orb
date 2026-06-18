@@ -40,7 +40,8 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Normalized scenarios use source types `tle`, `oem_ccsds`, and `initial_state`.
 - Scenario frames use exact Goal 04 identifiers: `TEME`, `EME2000`, `ITRF`, and `QSW`.
 - Scenario frame origins are `geocentric` or `spacecraft`.
-- The planned scenario endpoints are `/scenarios/examples`, `/scenarios/examples/{id}`, and `/scenarios/normalize`; these are not implemented until later increments.
+- The first scenario endpoints are `/scenarios/examples`, `/scenarios/examples/{id}`, and `/scenarios/normalize`.
+- In Increment 2, those endpoints support the bundled ISS TLE example and submitted TLE text.
 
 ## Dependencies
 

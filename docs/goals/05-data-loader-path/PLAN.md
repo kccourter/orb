@@ -243,12 +243,16 @@ Load TLE scenarios from pasted text, structured JSON, or bundled examples.
 
 - TLE is the first useful end-to-end loader path.
 - OEM and initial-state paths may still be unimplemented after this increment.
+- Implemented during Increment 2: added TLE text normalization, bundled `iss-tle` example loading, `/scenarios/examples`, `/scenarios/examples/{id}`, and `/scenarios/normalize` routes, plus propagation-input extraction for normalized TLE scenarios.
+- TLE scenarios normalize to frame `TEME`, origin `geocentric`, km/km/s units, preserved raw TLE text, object id metadata, and existing propagation-compatible TLE lines.
+- OEM/CCSDS and hand-authored initial-state loaders remain unimplemented until later increments.
 
 ### Validation
 
 - `uv run pytest`
 - `uv run ruff check .`
 - Manual API request using the example TLE.
+- Verified during Increment 2 with `uv run pytest` and `uv run ruff check .`; route tests cover listing the example, loading the example, normalizing submitted TLE text, and invalid TLE errors.
 
 ### Approval Question
 

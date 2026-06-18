@@ -165,6 +165,20 @@ class NormalizedScenario(BaseModel):
         return epoch
 
 
+class ScenarioNormalizeRequest(BaseModel):
+    source_type: ScenarioSourceType
+    text: str = Field(min_length=1)
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+
+
+class ScenarioExampleSummary(BaseModel):
+    id: str
+    name: str
+    source_type: ScenarioSourceType
+    format: str
+    frame: ScenarioFrame
+
+
 class ErrorDetail(BaseModel):
     code: str
     message: str
