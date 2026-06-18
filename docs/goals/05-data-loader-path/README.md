@@ -35,6 +35,13 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 - Treat `native` as a propagation request mode, not a scenario frame.
 - Prefer bundled examples and backend normalization before adding broad browser file parsing.
 
+## Schema Notes
+
+- Normalized scenarios use source types `tle`, `oem_ccsds`, and `initial_state`.
+- Scenario frames use exact Goal 04 identifiers: `TEME`, `EME2000`, `ITRF`, and `QSW`.
+- Scenario frame origins are `geocentric` or `spacecraft`.
+- The planned scenario endpoints are `/scenarios/examples`, `/scenarios/examples/{id}`, and `/scenarios/normalize`; these are not implemented until later increments.
+
 ## Dependencies
 
 - Goal 02 propagation models.

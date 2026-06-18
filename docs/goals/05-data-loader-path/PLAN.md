@@ -165,12 +165,16 @@ Define the normalized scenario model shared by API routes, parsers, fixtures, an
 
 - This increment should not require frontend UI.
 - Keep model names generic enough for later source formats, but do not build a general mission database.
+- Implemented during Increment 1: added normalized scenario Pydantic models for source metadata, exact frame metadata, units, TLE payloads, state vectors, optional samples, and shared scenario validation.
+- Scenario frames intentionally exclude `native`; broad labels such as `ECI` and `ECEF` fail validation until a loader maps them to exact Goal 04 frame names.
+- Endpoint taxonomy remains planned as `/scenarios/examples`, `/scenarios/examples/{id}`, and `/scenarios/normalize`; no routes were added in this increment.
 
 ### Validation
 
 - `uv run pytest`
 - `uv run ruff check .`
 - `CI=true pnpm --dir apps/web check` only if frontend types are added.
+- Verified during Increment 1 with `uv run pytest` and `uv run ruff check .`.
 
 ### Approval Question
 

@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field, field_validator
 
 Vector3 = tuple[float, float, float]
 PropagationFrameRequest = Literal["native", "TEME", "EME2000", "ITRF", "QSW"]
+ScenarioFrame = Literal["TEME", "EME2000", "ITRF", "QSW"]
+ScenarioSourceType = Literal["tle", "oem_ccsds", "initial_state"]
 FrameOrigin = Literal["geocentric", "spacecraft"]
 
 
@@ -93,6 +95,74 @@ class TlePropagationResponse(BaseModel):
     units: UnitsMetadata = Field(default_factory=UnitsMetadata)
     sampling: SamplingMetadata
     samples: list[PropagationSample] = Field(default_factory=list)
+
+
+class ScenarioSourceMetadata(BaseModel):
+    type: ScenarioSourceType
+    format: str = Field(min_length=1, max_length=80)
+    object_id: str | None = Field(default=None, min_length=1, max_length=120)
+    raw: str | None = Field(default=None, min_length=1)
+
+
+class ScenarioFrameMetadata(BaseModel):
+    name: ScenarioFrame
+    origin: FrameOrigin = "geocentric"
+
+
+class ScenarioUnitsMetadata(BaseModel):
+    position: Literal["km"] = "km"
+    velocity: Literal["km/s"] = "km/s"
+
+
+class ScenarioTleData(BaseModel):
+    line1: str = Field(min_length=1, max_length=120)
+    line2: str = Field(min_length=1, max_length=120)
+
+    @field_validator("line1")
+    @classmethod
+    def validate_line1(cls, line1: str) -> str:
+        return TleInput.validate_line1(line1)
+
+    @field_validator("line2")
+    @classmethod
+    def validate_line2(cls, line2: str) -> str:
+        return TleInput.validate_line2(line2)
+
+
+class ScenarioStateVector(BaseModel):
+    epoch: datetime
+    position_km: Vector3
+    velocity_km_s: Vector3
+
+    @field_validator("epoch")
+    @classmethod
+    def require_timezone(cls, epoch: datetime) -> datetime:
+        if epoch.tzinfo is None or epoch.utcoffset() is None:
+            msg = "epoch must include a UTC offset."
+            raise ValueError(msg)
+        return epoch
+
+
+class NormalizedScenario(BaseModel):
+    id: str | None = Field(default=None, min_length=1, max_length=120)
+    name: str = Field(min_length=1, max_length=120)
+    source: ScenarioSourceMetadata
+    frame: ScenarioFrameMetadata
+    units: ScenarioUnitsMetadata = Field(default_factory=ScenarioUnitsMetadata)
+    epoch: datetime | None = None
+    tle: ScenarioTleData | None = None
+    initial_state: ScenarioStateVector | None = None
+    samples: list[ScenarioStateVector] = Field(default_factory=list)
+
+    @field_validator("epoch")
+    @classmethod
+    def require_epoch_timezone(cls, epoch: datetime | None) -> datetime | None:
+        if epoch is None:
+            return None
+        if epoch.tzinfo is None or epoch.utcoffset() is None:
+            msg = "epoch must include a UTC offset."
+            raise ValueError(msg)
+        return epoch
 
 
 class ErrorDetail(BaseModel):
