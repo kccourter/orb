@@ -179,6 +179,11 @@ container so browser/font scaling cannot make the uncertainty panel overlap the
 Orekit panel. The uncertainty ellipsoid minimum display radius was also
 increased so `Current` mode is visible at Earth scene scale.
 
+Follow-on decision: the orbital uncertainty overlay remains a useful experiment,
+but detailed uncertainty does not belong in the global orbital situation view.
+The next increments back it out, redesign the orbital view for fixed-observer
+situational awareness, and move ellipsoid inspection into a local QSW explorer.
+
 Follow-up validation:
 
 ```sh

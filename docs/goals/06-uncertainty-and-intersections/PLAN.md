@@ -169,7 +169,157 @@ times from epoch through day 3.
 Completed decision: render ORB-SAT-1 synthetic QSW uncertainty ellipsoids with
 frontend fixture data, QSW orientation, visual gain, and compact controls.
 
-## Increment 4: Higher-Fidelity Ephemeris Product Investigation
+## Increment 4: Back Out Uncertainty From Orbital View
+
+### Objective
+
+Remove uncertainty ellipsoid rendering from the global orbital scene so that
+view returns to situational awareness instead of quantitative covariance
+inspection.
+
+### Scope
+
+- Remove or disable the uncertainty ellipsoid layer from the Earth-scale orbit
+  view.
+- Remove the uncertainty control strip from the orbital view.
+- Keep the frontend covariance fixture and scene ellipsoid code only if it will
+  be reused by the local uncertainty explorer; otherwise move or retire it.
+- Preserve the Goal 06 record that the orbital-view experiment was tried and
+  found unclear.
+- Update smoke tests so the orbital view no longer expects uncertainty controls.
+
+### Expected Files
+
+- `apps/web/src/main.ts`
+- `apps/web/src/scene/createScene.ts`
+- `apps/web/src/styles.css`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- Possible moves under `apps/web/src/uncertainty/`
+- Goal docs and record updates.
+
+### Acceptance Criteria
+
+- The orbital view has no uncertainty ellipsoid overlay or uncertainty control
+  strip.
+- The existing orbit trace, Earth, satellite marker, frame controls, and Orekit
+  controls still work.
+- Goal docs explicitly state that detailed uncertainty belongs in the local
+  uncertainty explorer, not the orbital view.
+
+### Validation
+
+- `pnpm --dir apps/web check`
+- `pnpm --dir apps/web build`
+- `pnpm --dir apps/web smoke`
+- Browser check at desktop and narrow viewport sizes.
+
+### Approval Question
+
+Approve removing uncertainty displays from the orbital view before redesigning
+the orbital scene behavior.
+
+## Increment 5: Fixed-Observer Orbital Situation View
+
+### Objective
+
+Modify the orbital display into a fixed-observer situational-awareness view:
+Earth rotates under the orbit traces while satellites and orbital shells precess
+from a stable inertial camera point.
+
+### Scope
+
+- Clarify the meaning of `Duration`: it controls the orbit preview window, not
+  the uncertainty horizon.
+- Rework camera defaults and scene motion so the observer remains fixed in
+  inertial space.
+- Keep Earth rotation visually distinct from satellite/orbit trace motion.
+- Preserve frame labels and avoid implying that the orbital view is a precise
+  uncertainty-measurement surface.
+- Prepare the view for multiple actors or shells later without building catalog
+  management yet.
+
+### Expected Files
+
+- `apps/web/src/main.ts`
+- `apps/web/src/scene/createScene.ts`
+- Possible scene/camera module under `apps/web/src/scene/`
+- `apps/web/src/ui/controls.ts`
+- `apps/web/src/styles.css`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- Goal docs and record updates.
+
+### Acceptance Criteria
+
+- The scene reads as a fixed-observer orbital situation view.
+- Earth rotation is visible under the orbital traces.
+- Satellite motion and traces remain readable at desktop and narrow viewports.
+- Duration and step controls are labeled or documented as orbit-preview
+  sampling controls.
+- No uncertainty ellipsoids are shown in this view.
+
+### Validation
+
+- `pnpm --dir apps/web check`
+- `pnpm --dir apps/web build`
+- `pnpm --dir apps/web smoke`
+- Browser checks for desktop and narrow viewport framing.
+
+### Approval Question
+
+Approve the fixed-observer orbital-view behavior before building the local
+uncertainty explorer.
+
+## Increment 6: Local QSW Uncertainty Explorer
+
+### Objective
+
+Create a local uncertainty explorer that renders the covariance ellipsoid at a
+fixed, readable scale with the spacecraft at the origin and QSW/RSW/RCI-style
+frame vectors clearly shown.
+
+### Scope
+
+- Add a local uncertainty view or mode separate from the global orbital view.
+- Render the spacecraft at the center with orthogonal local frame vectors.
+- Render the selected covariance ellipsoid at fixed scale using the ORB-SAT-1
+  synthetic covariance series.
+- Add controls for time offset from epoch, including a scrubber through day 3.
+- Add view controls for looking along local frame axes and/or orbit-pan/free
+  rotation.
+- Show quantitative readouts for sigma, axis lengths, frame, provenance, and
+  time from epoch.
+
+### Expected Files
+
+- Possible module: `apps/web/src/scene/localUncertaintyExplorer.ts`
+- Possible UI module: `apps/web/src/ui/localUncertaintyControls.ts`
+- `apps/web/src/uncertainty/`
+- `apps/web/src/main.ts`
+- `apps/web/src/styles.css`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- Goal docs and record updates.
+
+### Acceptance Criteria
+
+- A user can scrub from epoch to `+72h` and see the ellipsoid change.
+- The spacecraft remains centered and local frame vectors are clearly labeled.
+- Users can view along major local axes or freely rotate/pan the local view.
+- Axis lengths and covariance provenance are visible as quantitative readouts.
+- The global orbital view remains available for situational awareness.
+
+### Validation
+
+- `pnpm --dir apps/web check`
+- `pnpm --dir apps/web build`
+- `pnpm --dir apps/web smoke`
+- Browser checks at desktop and narrow viewport sizes.
+
+### Approval Question
+
+Approve the local QSW uncertainty explorer UX before returning to external
+ephemeris product work.
+
+## Increment 7: Higher-Fidelity Ephemeris Product Investigation
 
 ### Objective
 
@@ -211,7 +361,7 @@ Investigate OEM, CPF, and related POD products as paths around TLE limitations.
 
 Approve which ephemeris product path should become production-quality first.
 
-## Increment 5: Orbit-to-Orbit Intersection Probability Prototype
+## Increment 8: Orbit-to-Orbit Intersection Probability Prototype
 
 ### Objective
 
@@ -253,7 +403,7 @@ uncertainties grow over time.
 
 Approve the first probability method before connecting it to UI workflows.
 
-## Increment 6: Orbit-to-WEZ Ellipsoid Intersection Prototype
+## Increment 9: Orbit-to-WEZ Ellipsoid Intersection Prototype
 
 ### Objective
 
@@ -295,7 +445,7 @@ WEZ ellipsoid over time.
 
 Approve the WEZ geometry semantics before adding persistent scenario fixtures.
 
-## Increment 7: Records, Fixtures, and Completion Pass
+## Increment 10: Records, Fixtures, and Completion Pass
 
 ### Objective
 
@@ -344,6 +494,8 @@ Approve Goal 06 completion and decide the next exploration track.
   product, or estimated from TLE/OEM residuals.
 - Which covariance display frame should be default: source frame, QSW/RSW, or a
   user-selectable mode.
+- Whether the local uncertainty explorer should use `QSW`, `RSW`, or `RCI`
+  terminology in the UI, while preserving exact internal frame labels.
 - Whether intersection probability belongs in a new API endpoint or as an
   optional analysis block on propagation responses.
 - How to represent time-varying WEZ ellipsoids without overbuilding a mission

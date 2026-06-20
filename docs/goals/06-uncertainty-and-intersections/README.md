@@ -37,12 +37,16 @@ outside its intended freshness window.
    [SPACECRAFT.md](SPACECRAFT.md).
 2. Define uncertainty data model and covariance source strategy. Completed: see
    [UNCERTAINTY.md](UNCERTAINTY.md).
-3. Add uncertainty ellipsoid rendering from epoch through day 3. Completed: see
+3. Add uncertainty ellipsoid rendering from epoch through day 3. Completed as
+   an experiment; see
    [ELLIPSOID_RENDERING.md](ELLIPSOID_RENDERING.md).
-4. Investigate and prototype higher-fidelity ephemeris products.
-5. Prototype orbit-to-orbit intersection probability.
-6. Prototype orbit-to-WEZ ellipsoid intersection probability.
-7. Record validation, assumptions, and remaining risks.
+4. Back out uncertainty displays from the orbital view.
+5. Modify the orbital display into a fixed-observer situation view.
+6. Create a local QSW uncertainty explorer display.
+7. Investigate and prototype higher-fidelity ephemeris products.
+8. Prototype orbit-to-orbit intersection probability.
+9. Prototype orbit-to-WEZ ellipsoid intersection probability.
+10. Record validation, assumptions, and remaining risks.
 
 See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 Implementation notes are tracked in [RECORD.md](RECORD.md).

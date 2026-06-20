@@ -5,6 +5,11 @@
 Render ORB-SAT-1 uncertainty ellipsoids in the Three.js scene using the
 Increment 2 synthetic QSW covariance fixture, from epoch through day 3.
 
+Status note: this increment was implemented as an experiment. Follow-on planning
+moves detailed uncertainty out of the global orbital view and into a local QSW
+uncertainty explorer because the Earth-scale view is not a clear quantitative
+covariance surface.
+
 This increment makes uncertainty visible and controllable without changing
 propagation authority or claiming that the synthetic fixture is a real orbit
 determination product.
