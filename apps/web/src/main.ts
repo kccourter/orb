@@ -6,6 +6,10 @@ import {
 import "./orbits/fixtureChecks";
 import { ISS_TLE } from "./orbits/fixtures";
 import {
+  findAscendingNodePositionKm,
+  type NodeSearchSample,
+} from "./orbits/nodes";
+import {
   alignOrbitSamples,
   type SampleAlignment,
 } from "./orbits/alignment";
@@ -23,6 +27,7 @@ import { createOrbitScene } from "./scene/createScene";
 import {
   comparableSamplesToScenePoints,
   orbitSamplesToScenePoints,
+  positionKmToScenePoint,
 } from "./scene/orbitTrace";
 import {
   DEFAULT_ORBIT_SETTINGS,
@@ -98,6 +103,7 @@ function recomputeOrbit(settings: OrbitSettings) {
     toTlePropagationSettings(normalizedSettings),
   );
   const nextPoints = orbitSamplesToScenePoints(localSamples);
+  centerDisplayOnAscendingNode(localSamples);
   orbitScene.setOrbitPoints(nextPoints);
 
   if (nextPoints[0]) {
@@ -212,6 +218,7 @@ function showOrekitDisplayMode(
   comparableOrekitSamples: ReturnType<typeof orekitSampleToComparable>[],
 ) {
   const orekitPoints = comparableSamplesToScenePoints(comparableOrekitSamples);
+  centerDisplayOnAscendingNode(comparableOrekitSamples);
   orbitScene.clearTrace("satellite-js");
   orbitScene.setTracePoints("orekit", orekitPoints);
   displayPoints = orekitPoints;
@@ -221,6 +228,15 @@ function showOrekitDisplayMode(
   if (displayPoints[0]) {
     orbitScene.setSatellitePosition(displayPoints[0]);
   }
+}
+
+function centerDisplayOnAscendingNode(samples: readonly NodeSearchSample[]) {
+  const ascendingNodePositionKm = findAscendingNodePositionKm(samples);
+  orbitScene.setDisplayOrigin(
+    ascendingNodePositionKm
+      ? positionKmToScenePoint(ascendingNodePositionKm)
+      : positionKmToScenePoint({ x: 0, y: 0, z: 0 }),
+  );
 }
 
 function resize() {

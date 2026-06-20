@@ -17,6 +17,9 @@ test("recomputes the orbit from sampling controls", async ({ page }) => {
   const stepInput = page.getByTestId("step-input");
   const resetButton = page.getByTestId("reset-settings");
 
+  await expect(page.getByLabel("Orbit preview controls")).toBeVisible();
+  await expect(page.getByText("Preview")).toBeVisible();
+  await expect(page.getByText("Sample")).toBeVisible();
   await expect(epochInput).toHaveValue("2024-06-21T13:31:24Z");
   await expect(durationInput).toHaveValue("92.5");
   await expect(stepInput).toHaveValue("30");

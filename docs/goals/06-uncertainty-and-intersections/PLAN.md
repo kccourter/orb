@@ -225,9 +225,9 @@ covariance assets for the local QSW explorer.
 
 ## Increment 5: Fixed-Observer Orbital Situation View
 
-Status: Planned in
-[FIXED_OBSERVER_ORBIT_VIEW.md](FIXED_OBSERVER_ORBIT_VIEW.md); awaiting approval
-to implement.
+Status: Approved and implemented. See
+[FIXED_OBSERVER_ORBIT_VIEW.md](FIXED_OBSERVER_ORBIT_VIEW.md) and
+[RECORD.md](RECORD.md).
 
 ### Objective
 
@@ -276,7 +276,8 @@ from a stable inertial camera point.
 
 ### Approval Question
 
-Approve the fixed-observer orbit-view plan before implementation.
+Completed decision: use a named fixed-inertial-observer camera preset, visible
+Earth reference lines, and orbit-preview labels.
 
 ## Increment 6: Local QSW Uncertainty Explorer
 

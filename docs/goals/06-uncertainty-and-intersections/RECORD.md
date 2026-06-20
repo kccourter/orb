@@ -258,3 +258,76 @@ Browser checks:
   canvas rendered.
 - Narrow viewport `390x844`: no uncertainty controls, clean control stack,
   canvas rendered.
+
+## Increment 5: Fixed-Observer Orbital Situation View
+
+Status: implemented.
+
+### Outcome
+
+The orbital view now has a clearer fixed-observer situation-view posture.
+
+- Added a named `fixed_inertial_observer` camera preset.
+- Kept the camera stationary in scene coordinates.
+- Added subtle Earth reference rings so Earth rotation is visible under orbit
+  traces.
+- Centered the fixed display on the sampled orbit's ascending equator crossing
+  instead of Earth center, and rotated that node radial toward the fixed
+  observer.
+- Added a fixed ascending-node marker at the display origin so the anchor is
+  visible even when the LEO Earth limb dominates the view.
+- Relabeled the sampling controls from `Duration`/`Step` to `Preview`/`Sample`.
+- Updated the orbit controls accessible label to `Orbit preview controls`.
+- Preserved Goal 04 frame behavior and kept uncertainty out of the orbital view.
+
+### Artifacts
+
+- `apps/web/src/scene/cameraPresets.ts`
+- `apps/web/src/scene/createScene.ts`
+- `apps/web/src/orbits/nodes.ts`
+- `apps/web/src/scene/orbitTrace.ts`
+- `apps/web/src/ui/controls.ts`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- [FIXED_OBSERVER_ORBIT_VIEW.md](FIXED_OBSERVER_ORBIT_VIEW.md)
+
+### Implementation Notes
+
+- Earth reference rings are visual context, not an authoritative Earth-fixed
+  transform.
+- The scene owns a display-origin transform so Earth, traces, and markers move
+  together when the fixed view is centered on the ascending node.
+- The display-origin transform translates the selected node to scene origin and
+  rotates the world so the node is directly along the camera viewpoint.
+- The ascending-node marker is a visual anchor, not an additional propagated
+  actor.
+- `Preview` still maps to the existing orbit preview duration in minutes.
+- `Sample` still maps to the existing sample interval in seconds.
+- User camera orbit/pan controls remain deferred.
+
+### Validation
+
+Commands run:
+
+```sh
+pnpm --dir apps/web check
+pnpm --dir apps/web build
+pnpm --dir apps/web exec playwright test --config /private/tmp/orb-playwright-no-webserver.config.ts
+```
+
+Results:
+
+- TypeScript check: passed.
+- Vite build: passed, with the existing satellite.js browser-externalization and
+  chunk-size warnings.
+- Playwright smoke: 5 passed. The default `pnpm --dir apps/web smoke` server
+  startup hit `EPERM` on `127.0.0.1:5173`; validation used an explicit local
+  dev server on the same port and a temporary no-web-server Playwright config.
+
+Browser checks:
+
+- Desktop viewport `1280x800`: `Epoch`/`Preview`/`Sample` labels visible, no
+  uncertainty controls, canvas rendered.
+- Desktop viewport `1438x800`: ascending-node marker centered in the viewport
+  and aligned with the Earth disk behind it.
+- Narrow viewport `390x844`: labels visible, controls do not overlap, no
+  uncertainty controls, canvas rendered.

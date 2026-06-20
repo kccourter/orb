@@ -8,6 +8,8 @@ camera watches Earth rotate underneath orbit traces and satellite markers.
 The view should answer “what shells and actors are in the scene over this
 preview window?” It should not be a quantitative uncertainty display.
 
+Status: implemented.
+
 ## Current Ambiguity
 
 The existing `Duration` and `Step` controls are local browser TLE preview
@@ -22,7 +24,7 @@ Increment 5 should make that meaning visible in UI labels and docs.
 
 ## Recommended Direction
 
-Keep the global orbital view geocentric and camera-fixed:
+The global orbital view is geocentric and camera-fixed:
 
 - Camera is stationary in scene/inertial coordinates unless the user changes it
   with later camera controls.
@@ -42,8 +44,10 @@ pretending that all frame effects are physically complete in the browser.
 Use a named camera preset rather than ad hoc defaults:
 
 - `fixed_inertial_observer`
-- initial position: oblique view with Earth and the orbit shell framed;
-- camera target: Earth center;
+- initial position: oblique view with the ascending-node-centered orbit shell
+  framed;
+- camera target: selected orbit ascending node, translated to scene origin and
+  rotated so the node radial points toward the fixed observer;
 - no automatic camera orbiting.
 
 Increment 5 may keep the camera static without adding user orbit controls. A
@@ -64,6 +68,13 @@ Continue rotating Earth for visual context:
 Keep trace/marker behavior simple:
 
 - local browser preview remains `satellite.js` `TEME`;
+- the local preview is display-centered on the first ascending equator crossing
+  in the sampled window, with a nearest-equator fallback if the window does not
+  bracket a crossing;
+- the selected ascending-node display origin is marked with a compact fixed
+  crosshair so the centering behavior is inspectable;
+- the display transform rotates the scene so the selected ascending node is
+  directly along the fixed observer viewpoint, with Earth behind it;
 - Orekit `native`/`TEME` remains comparison-safe;
 - `EME2000`, `ITRF`, and `QSW` remain Orekit display modes per Goal 04;
 - QSW must not be presented as a geocentric shell.

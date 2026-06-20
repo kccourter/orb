@@ -42,7 +42,7 @@ outside its intended freshness window.
    [ELLIPSOID_RENDERING.md](ELLIPSOID_RENDERING.md).
 4. Back out uncertainty displays from the orbital view. Completed: see
    [ORBITAL_UNCERTAINTY_REMOVAL.md](ORBITAL_UNCERTAINTY_REMOVAL.md).
-5. Modify the orbital display into a fixed-observer situation view. Planned:
+5. Modify the orbital display into a fixed-observer situation view. Completed:
    see [FIXED_OBSERVER_ORBIT_VIEW.md](FIXED_OBSERVER_ORBIT_VIEW.md).
 6. Create a local QSW uncertainty explorer display.
 7. Investigate and prototype higher-fidelity ephemeris products.

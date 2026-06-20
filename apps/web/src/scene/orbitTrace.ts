@@ -22,17 +22,22 @@ export function comparableSamplesToScenePoints(
   return samplesToScenePoints(samples);
 }
 
+export function positionKmToScenePoint(positionKm: {
+  x: number;
+  y: number;
+  z: number;
+}): THREE.Vector3 {
+  return new THREE.Vector3(
+    positionKm.x / SCENE_KILOMETERS_PER_UNIT,
+    positionKm.y / SCENE_KILOMETERS_PER_UNIT,
+    positionKm.z / SCENE_KILOMETERS_PER_UNIT,
+  );
+}
+
 function samplesToScenePoints(
   samples: readonly { positionKm: { x: number; y: number; z: number } }[],
 ): THREE.Vector3[] {
-  return samples.map(
-    (sample) =>
-      new THREE.Vector3(
-        sample.positionKm.x / SCENE_KILOMETERS_PER_UNIT,
-        sample.positionKm.y / SCENE_KILOMETERS_PER_UNIT,
-        sample.positionKm.z / SCENE_KILOMETERS_PER_UNIT,
-      ),
-  );
+  return samples.map((sample) => positionKmToScenePoint(sample.positionKm));
 }
 
 export function updateOrbitTrace(
