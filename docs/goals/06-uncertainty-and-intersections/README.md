@@ -44,7 +44,8 @@ outside its intended freshness window.
    [ORBITAL_UNCERTAINTY_REMOVAL.md](ORBITAL_UNCERTAINTY_REMOVAL.md).
 5. Modify the orbital display into a fixed-observer situation view. Completed:
    see [FIXED_OBSERVER_ORBIT_VIEW.md](FIXED_OBSERVER_ORBIT_VIEW.md).
-6. Create a local QSW uncertainty explorer display.
+6. Create a local QSW uncertainty explorer display. Completed: see
+   [LOCAL_QSW_UNCERTAINTY_EXPLORER.md](LOCAL_QSW_UNCERTAINTY_EXPLORER.md).
 7. Investigate and prototype higher-fidelity ephemeris products.
 8. Prototype orbit-to-orbit intersection probability.
 9. Prototype orbit-to-WEZ ellipsoid intersection probability.

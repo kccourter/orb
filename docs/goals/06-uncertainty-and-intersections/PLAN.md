@@ -281,7 +281,9 @@ Earth reference lines, and orbit-preview labels.
 
 ## Increment 6: Local QSW Uncertainty Explorer
 
-Status: Proposed for approval.
+Status: Approved and implemented. See
+[LOCAL_QSW_UNCERTAINTY_EXPLORER.md](LOCAL_QSW_UNCERTAINTY_EXPLORER.md) and
+[RECORD.md](RECORD.md).
 
 ### Objective
 
@@ -417,9 +419,9 @@ Cartesian covariance can add frame conversion before this local scene boundary.
 
 ### Approval Question
 
-Approve this local QSW uncertainty explorer plan, including a separate local
-mode/panel, Q/S/W axes, `0h` through `72h` scrubber, sigma controls, and concise
-quantitative readouts, before implementation.
+Completed decision: implement a separate local QSW explorer mode with Q/S/W
+axes, exact fixture-sample stepping from `0h` through `72h`, sigma controls, and
+concise quantitative readouts.
 
 ## Increment 7: Higher-Fidelity Ephemeris Product Investigation
 

@@ -42,6 +42,48 @@ test("keeps uncertainty controls out of the orbital view", async ({ page }) => {
   await expect(page.getByTestId("uncertainty-sigma")).toHaveCount(0);
   await expect(page.getByTestId("uncertainty-density")).toHaveCount(0);
   await expect(page.getByTestId("uncertainty-status")).toHaveCount(0);
+  await expect(page.getByTestId("local-uncertainty-scene")).toBeHidden();
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
+test("opens the local QSW uncertainty explorer", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByTestId("local-view").click();
+
+  await expect(page.locator("#scene")).toBeHidden();
+  await expect(page.getByTestId("local-uncertainty-scene")).toBeVisible();
+  await expect(page.getByLabel("Local QSW uncertainty controls")).toBeVisible();
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "QSW",
+  );
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "synthetic",
+  );
+  expect(
+    await countNonBlankCanvasPixels(page, "#local-uncertainty-scene"),
+  ).toBeGreaterThan(0);
+
+  await page.getByTestId("local-uncertainty-time").fill("5");
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "+72.0h",
+  );
+
+  await page.getByTestId("local-uncertainty-sigma").selectOption("3");
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "45.0 km",
+  );
+
+  await page.getByTestId("local-view-q").click();
+  await expect(page.getByTestId("local-view-q")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+
+  await page.getByTestId("global-view").click();
+  await expect(page.locator("#scene")).toBeVisible();
+  await expect(page.getByTestId("local-uncertainty-scene")).toBeHidden();
+  await expect(page.getByTestId("uncertainty-toggle")).toHaveCount(0);
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 
@@ -189,9 +231,12 @@ test("sends selected propagation frame and clears stale Orekit state", async ({
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 
-async function countNonBlankCanvasPixels(page: Page): Promise<number> {
-  const nonBlankPixels = await page.waitForFunction(() => {
-    const scene = document.querySelector<HTMLCanvasElement>("#scene");
+async function countNonBlankCanvasPixels(
+  page: Page,
+  selector = "#scene",
+): Promise<number> {
+  const nonBlankPixels = await page.waitForFunction((targetSelector) => {
+    const scene = document.querySelector<HTMLCanvasElement>(targetSelector);
     const context = scene?.getContext("webgl2") ?? scene?.getContext("webgl");
 
     if (!scene || !context || scene.width === 0 || scene.height === 0) {
@@ -227,7 +272,7 @@ async function countNonBlankCanvasPixels(page: Page): Promise<number> {
     }
 
     return nonBackgroundPixels;
-  });
+  }, selector);
 
   return nonBlankPixels.jsonValue();
 }

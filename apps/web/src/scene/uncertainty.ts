@@ -15,6 +15,12 @@ export type UncertaintyEllipsoidOptions = {
   currentEpoch?: Date;
 };
 
+export type CovariancePrincipalAxes = {
+  valuesKm2: [number, number, number];
+  vectors: [number[], number[], number[]];
+  sigmaAxesKm: [number, number, number];
+};
+
 export const DEFAULT_UNCERTAINTY_OPTIONS: UncertaintyEllipsoidOptions = {
   visible: true,
   sigma: 2,
@@ -75,6 +81,24 @@ export function disposeUncertaintyEllipsoidGroup(group: THREE.Group): void {
   group.clear();
 }
 
+export function covariancePrincipalAxes(
+  sample: CovarianceSample,
+  sigma: 1 | 2 | 3,
+): CovariancePrincipalAxes | null {
+  const eigensystem = eigenDecomposeSymmetric3(sample.position_covariance);
+  if (!eigensystem) {
+    return null;
+  }
+
+  return {
+    valuesKm2: eigensystem.values,
+    vectors: eigensystem.vectors,
+    sigmaAxesKm: eigensystem.values.map(
+      (value) => Math.sqrt(Math.max(value, 0)) * sigma,
+    ) as [number, number, number],
+  };
+}
+
 function selectCovarianceSamples(
   samples: readonly CovarianceSample[],
   options: UncertaintyEllipsoidOptions,
@@ -108,15 +132,14 @@ function createEllipsoidMesh(
   nominalSample: TleOrbitSample,
   options: UncertaintyEllipsoidOptions,
 ): THREE.Mesh | null {
-  const eigensystem = eigenDecomposeSymmetric3(sample.position_covariance);
-  if (!eigensystem) {
+  const principalAxes = covariancePrincipalAxes(sample, options.sigma);
+  if (!principalAxes) {
     return null;
   }
 
-  const axesSceneUnits = eigensystem.values.map((value) =>
+  const axesSceneUnits = principalAxes.sigmaAxesKm.map((axisKm) =>
     Math.max(
-      (Math.sqrt(Math.max(value, 0)) * options.sigma * options.visualGain) /
-        SCENE_KILOMETERS_PER_UNIT,
+      (axisKm * options.visualGain) / SCENE_KILOMETERS_PER_UNIT,
       options.minRadiusSceneUnits,
     ),
   ) as [number, number, number];
@@ -137,7 +160,7 @@ function createEllipsoidMesh(
 
   const position = vectorFromKm(nominalSample.positionKm);
   const basis = qswBasis(nominalSample);
-  const orientedBasis = multiplyBasisByEigenvectors(basis, eigensystem.vectors);
+  const orientedBasis = multiplyBasisByEigenvectors(basis, principalAxes.vectors);
 
   const transform = new THREE.Matrix4().makeBasis(
     orientedBasis[0].multiplyScalar(axesSceneUnits[0]),

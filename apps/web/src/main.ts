@@ -25,6 +25,11 @@ import {
 import { sampleTleOrbit, type TleOrbitSample } from "./orbits/tle";
 import { createOrbitScene } from "./scene/createScene";
 import {
+  createLocalUncertaintyExplorerScene,
+  type LocalUncertaintyDisplay,
+} from "./scene/localUncertaintyExplorer";
+import { covariancePrincipalAxes } from "./scene/uncertainty";
+import {
   comparableSamplesToScenePoints,
   orbitSamplesToScenePoints,
   positionKmToScenePoint,
@@ -42,7 +47,12 @@ import {
 } from "./state/frameSettings";
 import { createOrbitControls } from "./ui/controls";
 import { createFrameControls } from "./ui/frameControls";
+import {
+  createLocalUncertaintyControls,
+  type LocalUncertaintySettings,
+} from "./ui/localUncertaintyControls";
 import { createOrekitOverlayControls } from "./ui/orekitOverlayControls";
+import { ORB_SAT_1_SYNTHETIC_COVARIANCE } from "./uncertainty/orbSat1SyntheticCovariance";
 import "./uncertainty/fixtureChecks";
 import "./styles.css";
 
@@ -52,13 +62,29 @@ if (!canvas) {
   throw new Error("Scene canvas was not found.");
 }
 
-const orbitScene = createOrbitScene(canvas);
+type AppView = "global" | "local";
+
+const LOCAL_UNCERTAINTY_VISUAL_GAIN = 0.08;
+const orbitCanvas = canvas;
+
+const localCanvas = document.createElement("canvas");
+localCanvas.id = "local-uncertainty-scene";
+localCanvas.dataset.testid = "local-uncertainty-scene";
+document.body.append(localCanvas);
+
+const orbitScene = createOrbitScene(orbitCanvas);
+const localUncertaintyScene = createLocalUncertaintyExplorerScene(localCanvas);
 const controls = createOrbitControls(DEFAULT_ORBIT_SETTINGS, updateOrbit);
 const frameControls = createFrameControls(
   DEFAULT_PROPAGATION_FRAME,
   updatePropagationFrame,
 );
 const orekitControls = createOrekitOverlayControls(refreshOrekitSamples);
+const localUncertaintyControls = createLocalUncertaintyControls(
+  ORB_SAT_1_SYNTHETIC_COVARIANCE,
+  updateLocalUncertainty,
+);
+const viewSwitch = createViewSwitch(setAppView);
 const controlStack = document.createElement("div");
 controlStack.className = "control-stack";
 controlStack.append(
@@ -66,8 +92,13 @@ controlStack.append(
   frameControls.element,
   orekitControls.element,
 );
-document.body.append(controlStack);
+document.body.append(
+  viewSwitch.element,
+  controlStack,
+  localUncertaintyControls.element,
+);
 
+let appView: AppView = "global";
 let currentSettings = normalizeOrbitSettings(DEFAULT_ORBIT_SETTINGS);
 let currentFrame: PropagationFrameRequest = DEFAULT_PROPAGATION_FRAME;
 let localSamples: TleOrbitSample[] = [];
@@ -79,6 +110,9 @@ let localPoints = recomputeOrbit(currentSettings);
 let displayPoints = localPoints;
 let displayEpochs = localSamples.map((sample) => sample.epoch);
 let frame = 0;
+
+updateLocalUncertainty(localUncertaintyControls.settings);
+setAppView("global");
 
 function updateOrbit(settings: OrbitSettings) {
   currentSettings = normalizeOrbitSettings(settings);
@@ -111,6 +145,44 @@ function recomputeOrbit(settings: OrbitSettings) {
   }
 
   return nextPoints;
+}
+
+function updateLocalUncertainty(settings: LocalUncertaintySettings) {
+  const sample = ORB_SAT_1_SYNTHETIC_COVARIANCE.samples[settings.sampleIndex];
+  if (!sample) {
+    return;
+  }
+
+  const display: LocalUncertaintyDisplay = {
+    sample,
+    sigma: settings.sigma,
+    visualGain: LOCAL_UNCERTAINTY_VISUAL_GAIN,
+  };
+  const principalAxes = covariancePrincipalAxes(sample, settings.sigma);
+
+  localUncertaintyScene.setDisplay(display);
+  localUncertaintyScene.setView(settings.view);
+
+  if (principalAxes) {
+    localUncertaintyControls.setReadout({
+      sample,
+      offsetHours: hoursFromCovarianceEpoch(sample.epoch),
+      axisLengthsKm: principalAxes.sigmaAxesKm,
+      frame: ORB_SAT_1_SYNTHETIC_COVARIANCE.frame.name,
+      provenance: ORB_SAT_1_SYNTHETIC_COVARIANCE.source.provenance,
+      units: ORB_SAT_1_SYNTHETIC_COVARIANCE.units.position_covariance,
+    });
+  }
+}
+
+function setAppView(nextView: AppView) {
+  appView = nextView;
+  orbitCanvas.hidden = appView !== "global";
+  localCanvas.hidden = appView !== "local";
+  controlStack.hidden = appView !== "global";
+  localUncertaintyControls.element.hidden = appView !== "local";
+  viewSwitch.setView(appView);
+  resize();
 }
 
 async function refreshOrekitSamples() {
@@ -243,6 +315,7 @@ function resize() {
   const width = window.innerWidth;
   const height = window.innerHeight;
   orbitScene.resize(width, height);
+  localUncertaintyScene.resize(width, height);
 }
 
 function animate() {
@@ -256,7 +329,11 @@ function animate() {
   updateDivergenceReadout(displayEpochs[frame]);
 
   orbitScene.rotateEarth();
-  orbitScene.render();
+  if (appView === "global") {
+    orbitScene.render();
+  } else {
+    localUncertaintyScene.render();
+  }
 }
 
 function updateDivergenceReadout(currentEpoch?: Date) {
@@ -274,6 +351,49 @@ function updateDivergenceReadout(currentEpoch?: Date) {
 }
 
 window.addEventListener("resize", resize);
-window.addEventListener("beforeunload", () => orbitScene.dispose());
+window.addEventListener("beforeunload", () => {
+  orbitScene.dispose();
+  localUncertaintyScene.dispose();
+});
 resize();
 animate();
+
+function hoursFromCovarianceEpoch(epochIso: string): number {
+  const firstEpoch = Date.parse(ORB_SAT_1_SYNTHETIC_COVARIANCE.samples[0].epoch);
+  const currentEpoch = Date.parse(epochIso);
+  if (!Number.isFinite(firstEpoch) || !Number.isFinite(currentEpoch)) {
+    return 0;
+  }
+
+  return (currentEpoch - firstEpoch) / (60 * 60 * 1000);
+}
+
+function createViewSwitch(onChange: (view: AppView) => void) {
+  const element = document.createElement("div");
+  element.className = "view-switch";
+  element.setAttribute("aria-label", "Scene view");
+
+  const buttons = new Map<AppView, HTMLButtonElement>();
+  for (const [view, label] of [
+    ["global", "Orbit"],
+    ["local", "QSW"],
+  ] as const) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "view-switch__button";
+    button.textContent = label;
+    button.dataset.testid = `${view}-view`;
+    button.addEventListener("click", () => onChange(view));
+    buttons.set(view, button);
+    element.append(button);
+  }
+
+  return {
+    element,
+    setView(view: AppView) {
+      for (const [entry, button] of buttons) {
+        button.setAttribute("aria-pressed", entry === view ? "true" : "false");
+      }
+    },
+  };
+}

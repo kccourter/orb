@@ -331,3 +331,74 @@ Browser checks:
   and aligned with the Earth disk behind it.
 - Narrow viewport `390x844`: labels visible, controls do not overlap, no
   uncertainty controls, canvas rendered.
+
+## Increment 6: Local QSW Uncertainty Explorer
+
+Status: implemented.
+
+### Outcome
+
+The app now includes a separate local QSW uncertainty explorer mode.
+
+- Added an `Orbit` / `QSW` mode switch.
+- Kept the global orbit scene free of uncertainty ellipsoid overlays.
+- Added a dedicated local Three.js scene for ORB-SAT-1 synthetic QSW
+  covariance.
+- Rendered the spacecraft at the local origin with labeled Q, S, and W axes.
+- Rendered the selected covariance ellipsoid at local readable scale.
+- Added controls for exact fixture-sample stepping from epoch through `+72h`,
+  sigma selection, and `Iso` / `+Q` / `+S` / `+W` view presets.
+- Added concise readouts for time, Q/S/W axis lengths, frame/units, and
+  synthetic provenance.
+
+### Artifacts
+
+- `apps/web/src/main.ts`
+- `apps/web/src/scene/localUncertaintyExplorer.ts`
+- `apps/web/src/scene/uncertainty.ts`
+- `apps/web/src/ui/localUncertaintyControls.ts`
+- `apps/web/src/styles.css`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- [LOCAL_QSW_UNCERTAINTY_EXPLORER.md](LOCAL_QSW_UNCERTAINTY_EXPLORER.md)
+- [PLAN.md](PLAN.md)
+- [README.md](README.md)
+
+### Implementation Notes
+
+- The local explorer uses the existing frontend copy of the ORB-SAT-1 synthetic
+  covariance fixture.
+- The current fixture is diagonal in QSW, so Q/S/W readouts are direct sigma
+  axis lengths in physical meters or kilometers.
+- The local mesh uses a display gain only inside the local scene. The readouts
+  are not display-scaled.
+- The scrubber steps through exact covariance fixture samples. Interpolation is
+  deferred.
+- The local scene owns its own renderer, camera, controls, labels, ellipsoid
+  geometry, and disposal path.
+
+### Validation
+
+Commands run:
+
+```sh
+pnpm --dir apps/web check
+pnpm --dir apps/web build
+pnpm --dir apps/web smoke
+```
+
+Results:
+
+- TypeScript check: passed.
+- Vite build: passed, with the existing satellite.js browser-externalization and
+  chunk-size warnings.
+- Playwright smoke: 6 passed. The first sandboxed smoke attempt hit `EPERM` on
+  `127.0.0.1:5173`; rerunning the same command with approved escalation passed.
+
+Browser checks:
+
+- Desktop viewport `1280x800`: local QSW scene nonblank, Q/S/W labels visible,
+  readouts readable, and mode switch usable.
+- Narrow viewport `390x844`: local QSW controls stack cleanly, readouts remain
+  readable, and mode switch remains reachable.
+- Global orbit view remains nonblank after returning from QSW mode and still has
+  no uncertainty controls or ellipsoid overlay.
