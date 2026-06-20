@@ -225,6 +225,10 @@ covariance assets for the local QSW explorer.
 
 ## Increment 5: Fixed-Observer Orbital Situation View
 
+Status: Planned in
+[FIXED_OBSERVER_ORBIT_VIEW.md](FIXED_OBSERVER_ORBIT_VIEW.md); awaiting approval
+to implement.
+
 ### Objective
 
 Modify the orbital display into a fixed-observer situational-awareness view:
@@ -235,11 +239,11 @@ from a stable inertial camera point.
 
 - Clarify the meaning of `Duration`: it controls the orbit preview window, not
   the uncertainty horizon.
-- Rework camera defaults and scene motion so the observer remains fixed in
-  inertial space.
+- Rework camera defaults into a named fixed-inertial-observer preset.
 - Keep Earth rotation visually distinct from satellite/orbit trace motion.
 - Preserve frame labels and avoid implying that the orbital view is a precise
   uncertainty-measurement surface.
+- Relabel the sampling controls as orbit preview controls.
 - Prepare the view for multiple actors or shells later without building catalog
   management yet.
 
@@ -251,6 +255,7 @@ from a stable inertial camera point.
 - `apps/web/src/ui/controls.ts`
 - `apps/web/src/styles.css`
 - `apps/web/tests/orbit-scene.smoke.spec.ts`
+- `docs/goals/06-uncertainty-and-intersections/FIXED_OBSERVER_ORBIT_VIEW.md`
 - Goal docs and record updates.
 
 ### Acceptance Criteria
@@ -271,8 +276,7 @@ from a stable inertial camera point.
 
 ### Approval Question
 
-Approve the fixed-observer orbital-view behavior before building the local
-uncertainty explorer.
+Approve the fixed-observer orbit-view plan before implementation.
 
 ## Increment 6: Local QSW Uncertainty Explorer
 
