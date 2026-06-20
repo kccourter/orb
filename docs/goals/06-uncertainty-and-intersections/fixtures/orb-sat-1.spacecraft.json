@@ -1,0 +1,93 @@
+{
+  "schema_version": "goal06-spacecraft-target-v1",
+  "spacecraft": {
+    "id": "orb-sat-1",
+    "display_name": "ORB-SAT-1",
+    "role": "synthetic_agile_leo_inspection_spacecraft",
+    "leo_target": true,
+    "description": "Clean-room synthetic spacecraft for Orb Lab uncertainty and intersection experiments. Physical and maneuver assumptions are inspired by PRISMA Mango; drag and POD uncertainty assumptions are informed by GRACE-FO research context.",
+    "references": {
+      "physical_agility": {
+        "name": "PRISMA Mango",
+        "usage": "mass, compact geometry, formation-flying mission personality, and 1 N class small-spacecraft propulsion reference"
+      },
+      "drag_pod": {
+        "name": "GRACE-FO",
+        "usage": "public reference for drag, non-gravitational acceleration, GNSS, ranging, and POD uncertainty research"
+      }
+    },
+    "mass": {
+      "value": 145.0,
+      "unit": "kg",
+      "provenance": "published_reference",
+      "reference": "PRISMA Mango public mission summary"
+    },
+    "geometry": {
+      "shape": "box_proxy",
+      "dimensions_m": {
+        "x": 0.8,
+        "y": 0.8,
+        "z": 0.8
+      },
+      "reference_area_m2": 0.64,
+      "provenance": "derived",
+      "reference": "0.8 m class PRISMA Mango public dimension summary"
+    },
+    "drag": {
+      "model": "ballistic_coefficient_seed",
+      "drag_coefficient": {
+        "value": 2.2,
+        "provenance": "synthetic"
+      },
+      "ballistic_coefficient_kg_m2": {
+        "value": 102.98,
+        "provenance": "derived",
+        "formula": "mass_kg / (drag_coefficient * reference_area_m2)"
+      },
+      "calibration_reference": {
+        "name": "GRACE-FO",
+        "provenance": "calibrated_reference",
+        "note": "Future increments may tune drag and covariance behavior against public GRACE-FO accelerometer and POD research products."
+      }
+    },
+    "maneuver": {
+      "model": "synthetic_smallspacecraft_thruster",
+      "thruster_class": {
+        "value": 1.0,
+        "unit": "N",
+        "provenance": "published_reference",
+        "reference": "PRISMA/HPGP small-spacecraft propulsion heritage"
+      },
+      "specific_impulse": {
+        "value": 253.0,
+        "unit": "s",
+        "provenance": "published_reference",
+        "reference": "HPGP/LMP-103S public performance summary"
+      },
+      "total_delta_v_budget": {
+        "value": null,
+        "unit": "m/s",
+        "provenance": "synthetic_pending"
+      }
+    },
+    "orbit_seed": {
+      "regime": "LEO",
+      "class": "sun_synchronous_reference",
+      "altitude_km": {
+        "value": 700.0,
+        "provenance": "synthetic",
+        "note": "Seeded near PRISMA public sun-synchronous orbit range; exact generated ephemeris belongs to a later increment."
+      },
+      "inclination_deg": {
+        "value": 98.4,
+        "provenance": "published_reference",
+        "reference": "PRISMA public orbit summary"
+      }
+    },
+    "uncertainty": {
+      "model": "not_defined_in_increment_1",
+      "provenance": "pending_increment_2",
+      "note": "Increment 2 defines covariance shape, frame, units, sigma level, and growth strategy."
+    }
+  }
+}

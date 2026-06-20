@@ -31,7 +31,8 @@ whose public data supports credible drag, maneuver, and uncertainty experiments.
 ### Expected Files
 
 - `docs/goals/06-uncertainty-and-intersections/SPACECRAFT.md`
-- Possible scenario fixture after approval.
+- `docs/goals/06-uncertainty-and-intersections/fixtures/orb-sat-1.spacecraft.json`
+- `docs/goals/06-uncertainty-and-intersections/RECORD.md`
 - Goal docs update.
 
 ### Acceptance Criteria
@@ -46,7 +47,8 @@ whose public data supports credible drag, maneuver, and uncertainty experiments.
 ### Validation
 
 - Documentation review.
-- No code validation expected unless fixtures are added.
+- JSON syntax check for the ORB-SAT-1 fixture.
+- No code validation expected because the fixture is not wired into runtime.
 
 ### Approval Question
 

@@ -43,6 +43,7 @@ outside its intended freshness window.
 7. Record validation, assumptions, and remaining risks.
 
 See [PLAN.md](PLAN.md) for approval-sized implementation increments.
+Implementation notes are tracked in [RECORD.md](RECORD.md).
 
 ## Initial Research Notes
 
@@ -68,6 +69,8 @@ and maneuver assumptions with GRACE-FO-inspired drag/POD uncertainty research.
   details are too thin for the first model.
 
 See [SPACECRAFT.md](SPACECRAFT.md) for assumption labels, gaps, and references.
+The first ORB-SAT-1 metadata fixture lives at
+[fixtures/orb-sat-1.spacecraft.json](fixtures/orb-sat-1.spacecraft.json).
 
 ### Data Product Leads
 
