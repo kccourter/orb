@@ -281,23 +281,87 @@ Earth reference lines, and orbit-preview labels.
 
 ## Increment 6: Local QSW Uncertainty Explorer
 
+Status: Proposed for approval.
+
 ### Objective
 
 Create a local uncertainty explorer that renders the covariance ellipsoid at a
 fixed, readable scale with the spacecraft at the origin and QSW/RSW/RCI-style
 frame vectors clearly shown.
 
+This increment should make the covariance itself inspectable without competing
+with the Earth-scale orbital situation view. The global scene remains for
+orbital context; the local explorer is for quantitative shape, frame, and time
+inspection.
+
 ### Scope
 
-- Add a local uncertainty view or mode separate from the global orbital view.
-- Render the spacecraft at the center with orthogonal local frame vectors.
-- Render the selected covariance ellipsoid at fixed scale using the ORB-SAT-1
-  synthetic covariance series.
-- Add controls for time offset from epoch, including a scrubber through day 3.
-- Add view controls for looking along local frame axes and/or orbit-pan/free
-  rotation.
-- Show quantitative readouts for sigma, axis lengths, frame, provenance, and
-  time from epoch.
+- Add a separate local uncertainty explorer panel or mode alongside the global
+  orbital view. Prefer an in-app mode switch or split layout over restoring
+  uncertainty overlays to the global orbital view.
+- Reuse the ORB-SAT-1 synthetic QSW covariance fixture and frontend uncertainty
+  types from Increment 3.
+- Render the spacecraft at the local origin with Q, S, and W basis vectors.
+  `Q` is radial, `S` is along-track, and `W` is cross-track angular momentum.
+- Render the selected covariance ellipsoid centered on the spacecraft. Use real
+  axis lengths in kilometers for readouts and a documented local display gain
+  for the mesh so epoch and day-3 cases are both readable.
+- Support `1σ`, `2σ`, and `3σ` surfaces by scaling the covariance-derived
+  standard deviations.
+- Add time controls from epoch through `+72h`, including a slider/scrubber and
+  direct sample stepping between fixture samples.
+- Interpolate between neighboring covariance samples only if it can be labeled
+  clearly as interpolated.
+- Add compact view controls for canonical local directions: look along `+Q`,
+  `+S`, `+W`, and return to an isometric default view.
+- Defer free orbit controls unless they are cheap and do not destabilize mobile
+  layout.
+- Show quantitative readouts for selected offset from epoch, UTC timestamp,
+  sigma level, axis lengths, frame label, provenance, covariance units, and
+  exact-versus-interpolated sample status.
+- Keep global orbit controls and Orekit comparison behavior intact.
+
+### Recommended UX
+
+Use a compact operational layout rather than a landing-style page:
+
+- Left or top controls: global/local view toggle, time scrubber, sigma selector,
+  and view-axis buttons.
+- Main local canvas: spacecraft marker at origin, labeled Q/S/W axes, ellipsoid,
+  and a subtle local grid or tick marks. Do not render Earth in this view except
+  for an optional tiny direction cue on the `-Q` side.
+- Readout strip: concise numeric values for the current covariance sample.
+
+The local view should default to the first covariance sample at epoch, `2σ`, and
+an isometric or `+W`-biased view that makes all three axes readable.
+
+### Data Flow
+
+1. Load `orbSat1SyntheticCovariance` from `apps/web/src/uncertainty/`.
+2. Derive the active covariance sample from the selected time offset.
+3. Convert the 3x3 covariance into principal axes. Diagonal fixture values can
+   be displayed directly in Q/S/W order, while the generic symmetric eigensystem
+   path should remain reusable for future non-diagonal covariance.
+4. Compute readout axis lengths from `sqrt(eigenvalue) * sigma`.
+5. Render the ellipsoid in local scene units with a local-only display scale.
+6. Dispose and replace local scene geometry when sigma, time, or view changes.
+
+The first implementation does not need nominal orbit samples because the
+covariance is already expressed in local QSW coordinates. Later imported
+Cartesian covariance can add frame conversion before this local scene boundary.
+
+### Scene And UI Boundaries
+
+- Keep the existing global orbital scene code focused on the Earth-scale
+  situation view.
+- Add a dedicated local explorer scene module that owns local camera and
+  renderer behavior, Q/S/W axes and labels, the spacecraft marker, and
+  covariance ellipsoid mesh lifecycle.
+- Keep local explorer UI state separate from orbit preview settings. Changing
+  the global preview duration or frame should not implicitly change the local
+  covariance sample.
+- Reuse existing covariance and ellipsoid helpers where it keeps the code
+  smaller, but do not reintroduce uncertainty controls into the global scene.
 
 ### Expected Files
 
@@ -307,15 +371,26 @@ frame vectors clearly shown.
 - `apps/web/src/main.ts`
 - `apps/web/src/styles.css`
 - `apps/web/tests/orbit-scene.smoke.spec.ts`
+- Possible test fixture/update under `apps/web/src/uncertainty/fixtureChecks.ts`
+- New plan/record doc:
+  `docs/goals/06-uncertainty-and-intersections/LOCAL_QSW_UNCERTAINTY_EXPLORER.md`
 - Goal docs and record updates.
 
 ### Acceptance Criteria
 
-- A user can scrub from epoch to `+72h` and see the ellipsoid change.
-- The spacecraft remains centered and local frame vectors are clearly labeled.
-- Users can view along major local axes or freely rotate/pan the local view.
+- A user can switch between global orbital context and the local QSW explorer.
+- A user can scrub from epoch to `+72h` and see the ellipsoid change without
+  moving the spacecraft away from the local origin.
+- The spacecraft remains centered and local Q/S/W frame vectors are clearly
+  labeled.
+- Users can view along major local axes and return to a default readable view.
 - Axis lengths and covariance provenance are visible as quantitative readouts.
+- Sigma changes update both the ellipsoid mesh and readout values.
+- The UI clearly labels the covariance as ORB-SAT-1 synthetic QSW data.
 - The global orbital view remains available for situational awareness.
+- The global orbital view still has no uncertainty ellipsoid overlay.
+- Geometry and materials are disposed when the local explorer is updated or
+  unloaded.
 
 ### Validation
 
@@ -323,11 +398,28 @@ frame vectors clearly shown.
 - `pnpm --dir apps/web build`
 - `pnpm --dir apps/web smoke`
 - Browser checks at desktop and narrow viewport sizes.
+- Manual checks should confirm the global scene remains nonblank and usable,
+  the local explorer scene is nonblank, Q/S/W labels and controls do not
+  overlap, changing time and sigma visibly updates the ellipsoid, and the
+  global view still contains no uncertainty controls or ellipsoids.
+
+### Not In Scope
+
+- API serving of covariance products.
+- Real OD covariance, CDM covariance, OEM covariance, or covariance conversion
+  from imported Cartesian frames.
+- Replacing the synthetic ORB-SAT-1 fixture.
+- Intersection probability readouts.
+- Restoring uncertainty ellipsoid rendering to the global orbital situation
+  view.
+- Full mission timeline integration beyond the local `0h` through `72h`
+  covariance scrubber.
 
 ### Approval Question
 
-Approve the local QSW uncertainty explorer UX before returning to external
-ephemeris product work.
+Approve this local QSW uncertainty explorer plan, including a separate local
+mode/panel, Q/S/W axes, `0h` through `72h` scrubber, sigma controls, and concise
+quantitative readouts, before implementation.
 
 ## Increment 7: Higher-Fidelity Ephemeris Product Investigation
 
