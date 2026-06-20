@@ -11,6 +11,10 @@ honest about what is measured, inferred, or synthetic.
 
 ## Increment 1: Spacecraft Target Research and Selection
 
+Status: Approved and completed in [SPACECRAFT.md](SPACECRAFT.md). Outcome:
+ORB-SAT-1 synthetic spacecraft, with PRISMA Mango as the physical/agility
+reference and GRACE-FO as the drag/POD uncertainty reference.
+
 ### Objective
 
 Replace ISS as the spacecraft under inspection with a smaller LEO spacecraft
@@ -32,7 +36,8 @@ whose public data supports credible drag, maneuver, and uncertainty experiments.
 
 ### Acceptance Criteria
 
-- The chosen target is smaller than ISS and is in LEO.
+- The chosen target is smaller than ISS and is in LEO. Completed: ORB-SAT-1
+  synthetic LEO inspector.
 - Physical and data-product assumptions are cited and labeled as measured,
   published, inferred, or synthetic.
 - Drag and delta-v capability gaps are explicit.
@@ -45,7 +50,9 @@ whose public data supports credible drag, maneuver, and uncertainty experiments.
 
 ### Approval Question
 
-Approve the spacecraft target before changing app defaults away from ISS.
+Completed decision: proceed with ORB-SAT-1 as the primary Goal 06 target.
+Use PRISMA Mango for physical/agility assumptions and GRACE-FO for drag/POD
+uncertainty assumptions unless project owner redirects.
 
 ## Increment 2: Uncertainty Model and Covariance Strategy
 

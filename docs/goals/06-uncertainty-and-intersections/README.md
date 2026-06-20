@@ -33,7 +33,8 @@ outside its intended freshness window.
 
 ## Proposed Increments
 
-1. Research and select the Goal 06 spacecraft target.
+1. Research and select the Goal 06 spacecraft target. Completed: see
+   [SPACECRAFT.md](SPACECRAFT.md).
 2. Define uncertainty data model and covariance source strategy.
 3. Add uncertainty ellipsoid rendering from epoch through day 3.
 4. Investigate and prototype higher-fidelity ephemeris products.
@@ -45,27 +46,28 @@ See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 
 ## Initial Research Notes
 
-### Spacecraft Candidates
+### Spacecraft Selection
 
-The initial recommendation is to evaluate these candidates before committing:
+Increment 1 recommends **ORB-SAT-1** as the primary spacecraft under inspection:
+a synthetic agile LEO reference spacecraft that combines PRISMA-like physical
+and maneuver assumptions with GRACE-FO-inspired drag/POD uncertainty research.
 
-- GRACE-FO 1 or 2: smaller LEO spacecraft than ISS, public mission literature,
-  precise GPS tracking, accelerometer data for non-gravitational force
-  separation, laser ranging, and a strong POD research ecosystem. This is likely
-  the best data-rich proxy for uncertainty and drag modeling, but it is not an
-  agile inspection spacecraft.
-- Sentinel-2A/B/C: active LEO Earth-observation spacecraft with well-known
-  public mission geometry and consistent sun-synchronous operations. Better
-  operational continuity than GRACE-FO, but less attractive for drag and delta-v
-  model transparency.
-- SkySat-class commercial imaging spacecraft: closer to the desired small,
-  agile LEO inspection profile and includes propulsion on later spacecraft, but
-  mass properties, drag area, maneuver authority, and POD products are less
-  openly documented.
+- ORB-SAT-1: best primary target because it gives Orb Lab one coherent
+  spacecraft identity while requiring explicit provenance labels for synthetic,
+  derived, published-reference, and calibrated-reference parameters.
+- PRISMA Mango: best physical/agility reference because it is a small LEO
+  formation-flying and rendezvous demonstrator with public mass, dimensions,
+  orbit class, and propulsion heritage; used as the physical/agility reference.
+- GRACE-FO 1/2: best reference target for drag and precise-orbit research
+  because of public accelerometer, GNSS, KBR/LRI, and POD ecosystem context;
+  used as the drag/POD uncertainty reference.
+- Sentinel-2A/B/C: useful operational LEO reference, but larger and less
+  inspection-like.
+- SkySat-class commercial imaging spacecraft: closer to a modern taskable agile
+  LEO spacecraft, but public mass-property, drag-area, and maneuver-authority
+  details are too thin for the first model.
 
-The plan should favor a spacecraft with public physical and tracking data over a
-spacecraft that merely sounds agile. A poor physical model would make the
-uncertainty visualization look precise while teaching the wrong lesson.
+See [SPACECRAFT.md](SPACECRAFT.md) for assumption labels, gaps, and references.
 
 ### Data Product Leads
 
