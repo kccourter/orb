@@ -171,6 +171,10 @@ frontend fixture data, QSW orientation, visual gain, and compact controls.
 
 ## Increment 4: Back Out Uncertainty From Orbital View
 
+Status: Planned in
+[ORBITAL_UNCERTAINTY_REMOVAL.md](ORBITAL_UNCERTAINTY_REMOVAL.md); awaiting
+approval to implement.
+
 ### Objective
 
 Remove uncertainty ellipsoid rendering from the global orbital scene so that
@@ -179,11 +183,11 @@ inspection.
 
 ### Scope
 
-- Remove or disable the uncertainty ellipsoid layer from the Earth-scale orbit
-  view.
+- Disconnect uncertainty ellipsoid rendering from the Earth-scale orbit view.
 - Remove the uncertainty control strip from the orbital view.
-- Keep the frontend covariance fixture and scene ellipsoid code only if it will
-  be reused by the local uncertainty explorer; otherwise move or retire it.
+- Preserve frontend covariance types and fixtures for the local uncertainty
+  explorer.
+- Retain or move generic ellipsoid math only if it is useful for Increment 6.
 - Preserve the Goal 06 record that the orbital-view experiment was tried and
   found unclear.
 - Update smoke tests so the orbital view no longer expects uncertainty controls.
@@ -194,7 +198,8 @@ inspection.
 - `apps/web/src/scene/createScene.ts`
 - `apps/web/src/styles.css`
 - `apps/web/tests/orbit-scene.smoke.spec.ts`
-- Possible moves under `apps/web/src/uncertainty/`
+- Possible deletion: `apps/web/src/ui/uncertaintyControls.ts`
+- `docs/goals/06-uncertainty-and-intersections/ORBITAL_UNCERTAINTY_REMOVAL.md`
 - Goal docs and record updates.
 
 ### Acceptance Criteria
@@ -215,8 +220,7 @@ inspection.
 
 ### Approval Question
 
-Approve removing uncertainty displays from the orbital view before redesigning
-the orbital scene behavior.
+Approve the orbital-view uncertainty removal plan before implementation.
 
 ## Increment 5: Fixed-Observer Orbital Situation View
 
