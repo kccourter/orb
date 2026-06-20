@@ -32,6 +32,32 @@ test("recomputes the orbit from sampling controls", async ({ page }) => {
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 
+test("renders and controls synthetic uncertainty ellipsoids", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const toggle = page.getByTestId("uncertainty-toggle");
+  const sigma = page.getByTestId("uncertainty-sigma");
+  const density = page.getByTestId("uncertainty-density");
+  const status = page.getByTestId("uncertainty-status");
+
+  await expect(toggle).toBeChecked();
+  await expect(sigma).toHaveValue("2");
+  await expect(density).toHaveValue("all");
+  await expect(status).toHaveText("QSW synthetic: 6");
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+
+  await sigma.selectOption("3");
+  await density.selectOption("daily");
+  await expect(status).toHaveText("QSW synthetic: 4");
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+
+  await toggle.uncheck();
+  await expect(status).toHaveText("QSW synthetic: 0");
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
 test("requests Orekit samples from the manual refresh control", async ({ page }) => {
   await page.route("http://127.0.0.1:8000/propagate/tle", async (route) => {
     const request = route.request();

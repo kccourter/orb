@@ -102,3 +102,94 @@ Results:
 - `tests/test_uncertainty_models.py`: 11 passed.
 - Full pytest suite: 40 passed, 5 skipped.
 - Ruff: all checks passed.
+
+## Increment 3: Ellipsoid Rendering From Epoch Through Day 3
+
+Status: implemented.
+
+### Outcome
+
+The web scene now renders ORB-SAT-1 synthetic QSW uncertainty ellipsoids from
+epoch through day 3.
+
+- Added a typed frontend covariance fixture copy under `apps/web/src/uncertainty/`.
+- Added fixture checks for object id, frame, covariance type, ordering, and
+  nonnegative diagonal covariance.
+- Added Three.js ellipsoid mesh generation from `position_3x3` covariance.
+- Oriented ellipsoids using a QSW basis computed from nominal position and
+  velocity samples.
+- Added visual gain so meter-to-kilometer covariance is inspectable at Earth
+  scene scale while leaving fixture data in `km^2`.
+- Added compact controls for visibility, sigma level, and sample density.
+- Added Playwright smoke coverage for the uncertainty controls.
+
+### Artifacts
+
+- `apps/web/src/uncertainty/types.ts`
+- `apps/web/src/uncertainty/orbSat1SyntheticCovariance.ts`
+- `apps/web/src/uncertainty/fixtureChecks.ts`
+- `apps/web/src/scene/uncertainty.ts`
+- `apps/web/src/scene/createScene.ts`
+- `apps/web/src/ui/uncertaintyControls.ts`
+- `apps/web/src/main.ts`
+- `apps/web/src/styles.css`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- [ELLIPSOID_RENDERING.md](ELLIPSOID_RENDERING.md)
+
+### Implementation Notes
+
+- The frontend fixture is a copy of the goal-local covariance fixture. Later
+  scenario loading can remove this duplication by serving fixtures through the
+  API.
+- Ellipsoid anchors are generated at covariance sample offsets relative to the
+  selected nominal epoch, so the layer can show day-3 uncertainty without
+  changing the existing sampling control limits.
+- The layer remains synthetic and explicitly labeled `QSW synthetic`.
+- API-served covariance, real POD products, and intersection probability remain
+  deferred.
+
+### Validation
+
+Commands run:
+
+```sh
+CI=true pnpm --dir apps/web check
+CI=true pnpm --dir apps/web build
+CI=true pnpm --dir apps/web smoke
+```
+
+Results:
+
+- TypeScript check: passed.
+- Vite build: passed, with existing satellite.js browser-externalization and
+  chunk-size warnings.
+- Playwright smoke: 5 passed.
+
+Browser checks:
+
+- Desktop viewport `1280x800`: uncertainty controls visible, canvas nonblank,
+  ellipsoid layer visible.
+- Narrow viewport `390x844`: control stack has clear vertical spacing, canvas
+  nonblank, ellipsoid layer visible.
+
+### Follow-Up UI Fix
+
+After local demo feedback, the controls were moved into a single stacked
+container so browser/font scaling cannot make the uncertainty panel overlap the
+Orekit panel. The uncertainty ellipsoid minimum display radius was also
+increased so `Current` mode is visible at Earth scene scale.
+
+Follow-up validation:
+
+```sh
+apps/web/node_modules/.bin/tsc --noEmit
+apps/web/node_modules/.bin/vite build
+```
+
+Results:
+
+- TypeScript check: passed.
+- Vite build: passed, with the existing satellite.js browser-externalization and
+  chunk-size warnings.
+- Wide viewport `2012x1215` with `3σ` + `Current`: controls stacked cleanly and
+  the current ellipsoid is visibly rendered.

@@ -5,13 +5,14 @@
 Render ORB-SAT-1 uncertainty ellipsoids in the Three.js scene using the
 Increment 2 synthetic QSW covariance fixture, from epoch through day 3.
 
-This increment should make uncertainty visible and controllable without
-changing propagation authority or claiming that the synthetic fixture is a real
-orbit determination product.
+This increment makes uncertainty visible and controllable without changing
+propagation authority or claiming that the synthetic fixture is a real orbit
+determination product.
 
 ## Recommended Direction
 
-Add a frontend-only uncertainty overlay for the existing scene:
+The implemented direction is a frontend-only uncertainty overlay for the
+existing scene:
 
 - Import a TypeScript representation of the ORB-SAT-1 synthetic covariance
   samples.
@@ -23,14 +24,14 @@ Add a frontend-only uncertainty overlay for the existing scene:
   orbit trace, Earth, and satellite marker readable.
 - Add compact controls for visibility, sigma level, and sample density.
 
-The first implementation can use the local browser TLE path as the nominal
+The first implementation uses the local browser TLE path as the nominal
 trace. Later increments can reuse the same overlay with Orekit/OEM samples.
 
 ## Data Flow
 
 1. Keep the canonical JSON fixture in
    `docs/goals/06-uncertainty-and-intersections/fixtures/orb-sat-1.synthetic-covariance.json`.
-2. Add a frontend fixture module under `apps/web/src/uncertainty/` containing
+2. Added a frontend fixture module under `apps/web/src/uncertainty/` containing
    the same day-3 covariance values as typed data.
 3. Add TypeScript types for covariance series, frame metadata, units, samples,
    and provenance.

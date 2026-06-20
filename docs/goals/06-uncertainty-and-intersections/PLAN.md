@@ -113,8 +113,8 @@ through day 3. Frontend rendering remains deferred to Increment 3.
 
 ## Increment 3: Ellipsoid Rendering From Epoch Through Day 3
 
-Status: Planned in [ELLIPSOID_RENDERING.md](ELLIPSOID_RENDERING.md); awaiting
-approval to implement.
+Status: Approved and implemented. See
+[ELLIPSOID_RENDERING.md](ELLIPSOID_RENDERING.md) and [RECORD.md](RECORD.md).
 
 ### Objective
 
@@ -166,8 +166,8 @@ times from epoch through day 3.
 
 ### Approval Question
 
-Approve the frontend fixture copy, QSW-oriented ellipsoid rendering, visual gain,
-and compact uncertainty controls before implementation.
+Completed decision: render ORB-SAT-1 synthetic QSW uncertainty ellipsoids with
+frontend fixture data, QSW orientation, visual gain, and compact controls.
 
 ## Increment 4: Higher-Fidelity Ephemeris Product Investigation
 
