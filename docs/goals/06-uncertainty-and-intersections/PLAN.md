@@ -58,8 +58,8 @@ uncertainty assumptions unless project owner redirects.
 
 ## Increment 2: Uncertainty Model and Covariance Strategy
 
-Status: Planned in [UNCERTAINTY.md](UNCERTAINTY.md); awaiting approval to
-implement.
+Status: Approved and implemented. See [UNCERTAINTY.md](UNCERTAINTY.md) and
+[RECORD.md](RECORD.md).
 
 ### Objective
 
@@ -82,12 +82,9 @@ ellipsoid visualization and later intersection math.
 ### Expected Files
 
 - `src/orb_lab/models.py`
-- Possible module: `src/orb_lab/uncertainty.py`
 - `tests/test_uncertainty_models.py`
 - `docs/goals/06-uncertainty-and-intersections/UNCERTAINTY.md`
 - `docs/goals/06-uncertainty-and-intersections/fixtures/orb-sat-1.synthetic-covariance.json`
-- Possible frontend type module under `apps/web/src/api/` if the fixture is
-  consumed by TypeScript in this increment.
 - Goal docs update.
 
 ### Acceptance Criteria
@@ -111,8 +108,8 @@ ellipsoid visualization and later intersection math.
 
 ### Approval Question
 
-Approve the `position_3x3` QSW synthetic covariance schema and ORB-SAT-1 day-3
-growth fixture before implementation.
+Completed decision: use `position_3x3` QSW synthetic covariance for ORB-SAT-1
+through day 3. Frontend rendering remains deferred to Increment 3.
 
 ## Increment 3: Ellipsoid Rendering From Epoch Through Day 3
 

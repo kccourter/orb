@@ -49,3 +49,56 @@ node --input-type=module -e "import fs from 'node:fs'; JSON.parse(fs.readFileSyn
 ```
 
 Result: passed.
+
+## Increment 2: Uncertainty Model and Covariance Strategy
+
+Status: implemented.
+
+### Outcome
+
+The project now has a first uncertainty schema for ORB-SAT-1:
+
+- `CovarianceSeries` groups uncertainty samples for one object.
+- `CovarianceSample` supports `position_3x3` covariance in `km^2`.
+- `CovarianceFrameMetadata` accepts exact `QSW`, `TEME`, `EME2000`, and `ITRF`
+  frame labels, and normalizes `RSW` to `QSW`.
+- Broad frame labels such as `ECI`, `ECEF`, and `native` are rejected.
+- Samples require timezone-aware epochs, 1-sigma covariance semantics, and
+  provenance labels.
+- 3x3 matrices are validated for shape, finite values, nonnegative diagonal,
+  symmetry, and positive-semidefinite behavior.
+
+The first ORB-SAT-1 synthetic covariance fixture covers epoch through day 3 in
+QSW with diagonal covariance growth. It is intentionally synthetic and is not
+claimed as an orbit determination product.
+
+### Artifacts
+
+- `src/orb_lab/models.py`
+- `tests/test_uncertainty_models.py`
+- [fixtures/orb-sat-1.synthetic-covariance.json](fixtures/orb-sat-1.synthetic-covariance.json)
+- [UNCERTAINTY.md](UNCERTAINTY.md)
+
+### Implementation Notes
+
+- The covariance fixture is goal-local and not wired into the API or frontend.
+- TypeScript mirror types were deferred because Increment 3 owns rendering and
+  frontend consumption.
+- Imported covariance, OEM/CDM covariance, residual-estimated covariance, and
+  6x6 position-velocity covariance are deferred.
+
+### Validation
+
+Commands run:
+
+```sh
+uv run pytest tests/test_uncertainty_models.py
+uv run pytest
+uv run ruff check .
+```
+
+Results:
+
+- `tests/test_uncertainty_models.py`: 11 passed.
+- Full pytest suite: 40 passed, 5 skipped.
+- Ruff: all checks passed.

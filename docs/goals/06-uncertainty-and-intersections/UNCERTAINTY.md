@@ -6,12 +6,12 @@ Define the smallest useful uncertainty model for ORB-SAT-1 from epoch through
 day 3, while leaving a clean path to imported covariance products and later
 intersection math.
 
-This increment should add schema and fixtures only after approval. It should not
-render ellipsoids yet and should not claim high-fidelity covariance realism.
+This increment adds schema and fixtures only. It does not render ellipsoids and
+does not claim high-fidelity covariance realism.
 
 ## Recommended Direction
 
-Use a **position covariance series** as the first implemented model:
+The implemented first model is a **position covariance series**:
 
 - One uncertainty series belongs to one propagated object.
 - Each sample has epoch, frame, units, covariance matrix, sigma semantics, and
@@ -68,11 +68,11 @@ boundary and preserve source units in metadata.
 
 ### Matrix Shape
 
-Increment 2 should support:
+Increment 2 supports:
 
 - `position_3x3`: a symmetric 3x3 covariance matrix.
 
-Reserve but do not fully implement:
+Reserved but not fully implemented:
 
 - `cartesian_6x6`: position and velocity covariance in a Cartesian frame.
 
@@ -156,7 +156,7 @@ This is not intended to model a real OD process. It is a controlled visual and
 math fixture that makes TLE/SGP4-like uncertainty growth visible without
 pretending precision.
 
-## Proposed Implementation Steps
+## Implementation Steps
 
 1. Add Pydantic models for uncertainty provenance, covariance frame metadata,
    units, covariance samples, and covariance series.
@@ -166,8 +166,8 @@ pretending precision.
    samples above.
 4. Add focused Python tests for valid fixture loading and invalid matrix/frame
    cases.
-5. Add TypeScript mirror types only if Increment 3 will consume the fixture from
-   the frontend directly; otherwise defer frontend types to rendering work.
+5. Defer TypeScript mirror types because Increment 3 owns frontend rendering and
+   fixture consumption.
 6. Update [RECORD.md](RECORD.md) with commands run and the synthetic-growth
    assumption.
 

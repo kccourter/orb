@@ -3,11 +3,20 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+import numpy as np
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 Vector3 = tuple[float, float, float]
 PropagationFrameRequest = Literal["native", "TEME", "EME2000", "ITRF", "QSW"]
 FrameOrigin = Literal["geocentric", "spacecraft"]
+UncertaintyProvenance = Literal[
+    "published_reference",
+    "derived",
+    "synthetic",
+    "calibrated_reference",
+    "imported",
+]
+CovarianceType = Literal["position_3x3"]
 
 
 class TleInput(BaseModel):
@@ -102,6 +111,94 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorDetail
+
+
+class UncertaintySourceMetadata(BaseModel):
+    type: str = Field(min_length=1, max_length=80)
+    provenance: UncertaintyProvenance
+    description: str | None = Field(default=None, max_length=500)
+
+
+class CovarianceFrameMetadata(BaseModel):
+    name: str
+    origin: FrameOrigin
+    reference: str = Field(default="nominal_state", min_length=1, max_length=120)
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, name: str) -> str:
+        normalized = name.strip().upper()
+        if normalized == "RSW":
+            return "QSW"
+        if normalized not in {"QSW", "TEME", "EME2000", "ITRF"}:
+            msg = "Covariance frame must be one of QSW, TEME, EME2000, or ITRF."
+            raise ValueError(msg)
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_origin(self) -> CovarianceFrameMetadata:
+        if self.name == "QSW" and self.origin != "spacecraft":
+            msg = "QSW covariance frame must use spacecraft origin."
+            raise ValueError(msg)
+        if self.name in {"TEME", "EME2000", "ITRF"} and self.origin != "geocentric":
+            msg = f"{self.name} covariance frame must use geocentric origin."
+            raise ValueError(msg)
+        return self
+
+
+class UncertaintyUnitsMetadata(BaseModel):
+    position: Literal["km"] = "km"
+    position_covariance: Literal["km^2"] = "km^2"
+
+
+class CovarianceSample(BaseModel):
+    epoch: datetime
+    covariance_type: CovarianceType = "position_3x3"
+    covariance_sigma: Literal[1] = 1
+    position_covariance: list[list[float]]
+    provenance: UncertaintyProvenance
+    confidence_label: str | None = Field(default=None, max_length=120)
+
+    @field_validator("epoch")
+    @classmethod
+    def require_timezone(cls, epoch: datetime) -> datetime:
+        if epoch.tzinfo is None or epoch.utcoffset() is None:
+            msg = "covariance sample epoch must include a UTC offset."
+            raise ValueError(msg)
+        return epoch
+
+    @model_validator(mode="after")
+    def validate_position_covariance(self) -> CovarianceSample:
+        matrix = self.position_covariance
+        if len(matrix) != 3 or any(len(row) != 3 for row in matrix):
+            msg = "position_3x3 covariance must be a 3x3 matrix."
+            raise ValueError(msg)
+
+        covariance = np.array(matrix, dtype=float)
+        if not np.all(np.isfinite(covariance)):
+            msg = "position_3x3 covariance entries must be finite numbers."
+            raise ValueError(msg)
+        if np.any(np.diag(covariance) < 0.0):
+            msg = "position_3x3 covariance diagonal entries must be nonnegative."
+            raise ValueError(msg)
+        if not np.allclose(covariance, covariance.T, rtol=0.0, atol=1e-12):
+            msg = "position_3x3 covariance must be symmetric."
+            raise ValueError(msg)
+
+        eigenvalues = np.linalg.eigvalsh(covariance)
+        if np.min(eigenvalues) < -1e-12:
+            msg = "position_3x3 covariance must be positive semidefinite."
+            raise ValueError(msg)
+        return self
+
+
+class CovarianceSeries(BaseModel):
+    object_id: str = Field(min_length=1, max_length=120)
+    series_id: str = Field(min_length=1, max_length=160)
+    source: UncertaintySourceMetadata
+    frame: CovarianceFrameMetadata
+    units: UncertaintyUnitsMetadata = Field(default_factory=UncertaintyUnitsMetadata)
+    samples: list[CovarianceSample] = Field(min_length=1)
 
 
 class DemoStateVector(BaseModel):
