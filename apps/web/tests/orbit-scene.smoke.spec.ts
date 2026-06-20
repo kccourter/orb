@@ -32,29 +32,13 @@ test("recomputes the orbit from sampling controls", async ({ page }) => {
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 
-test("renders and controls synthetic uncertainty ellipsoids", async ({
-  page,
-}) => {
+test("keeps uncertainty controls out of the orbital view", async ({ page }) => {
   await page.goto("/");
 
-  const toggle = page.getByTestId("uncertainty-toggle");
-  const sigma = page.getByTestId("uncertainty-sigma");
-  const density = page.getByTestId("uncertainty-density");
-  const status = page.getByTestId("uncertainty-status");
-
-  await expect(toggle).toBeChecked();
-  await expect(sigma).toHaveValue("2");
-  await expect(density).toHaveValue("all");
-  await expect(status).toHaveText("QSW synthetic: 6");
-  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
-
-  await sigma.selectOption("3");
-  await density.selectOption("daily");
-  await expect(status).toHaveText("QSW synthetic: 4");
-  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
-
-  await toggle.uncheck();
-  await expect(status).toHaveText("QSW synthetic: 0");
+  await expect(page.getByTestId("uncertainty-toggle")).toHaveCount(0);
+  await expect(page.getByTestId("uncertainty-sigma")).toHaveCount(0);
+  await expect(page.getByTestId("uncertainty-density")).toHaveCount(0);
+  await expect(page.getByTestId("uncertainty-status")).toHaveCount(0);
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 

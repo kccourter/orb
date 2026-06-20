@@ -40,7 +40,7 @@ outside its intended freshness window.
 3. Add uncertainty ellipsoid rendering from epoch through day 3. Completed as
    an experiment; see
    [ELLIPSOID_RENDERING.md](ELLIPSOID_RENDERING.md).
-4. Back out uncertainty displays from the orbital view. Planned: see
+4. Back out uncertainty displays from the orbital view. Completed: see
    [ORBITAL_UNCERTAINTY_REMOVAL.md](ORBITAL_UNCERTAINTY_REMOVAL.md).
 5. Modify the orbital display into a fixed-observer situation view.
 6. Create a local QSW uncertainty explorer display.

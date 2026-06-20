@@ -171,9 +171,9 @@ frontend fixture data, QSW orientation, visual gain, and compact controls.
 
 ## Increment 4: Back Out Uncertainty From Orbital View
 
-Status: Planned in
-[ORBITAL_UNCERTAINTY_REMOVAL.md](ORBITAL_UNCERTAINTY_REMOVAL.md); awaiting
-approval to implement.
+Status: Approved and implemented. See
+[ORBITAL_UNCERTAINTY_REMOVAL.md](ORBITAL_UNCERTAINTY_REMOVAL.md) and
+[RECORD.md](RECORD.md).
 
 ### Objective
 
@@ -220,7 +220,8 @@ inspection.
 
 ### Approval Question
 
-Approve the orbital-view uncertainty removal plan before implementation.
+Completed decision: remove uncertainty displays from the orbital view and keep
+covariance assets for the local QSW explorer.
 
 ## Increment 5: Fixed-Observer Orbital Situation View
 

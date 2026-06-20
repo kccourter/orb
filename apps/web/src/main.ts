@@ -18,21 +18,12 @@ import {
   orekitSampleToComparable,
   satelliteJsSampleToComparable,
 } from "./orbits/sampleTypes";
-import {
-  sampleTleOrbit,
-  sampleTleOrbitAtEpochs,
-  type TleOrbitSample,
-} from "./orbits/tle";
+import { sampleTleOrbit, type TleOrbitSample } from "./orbits/tle";
 import { createOrbitScene } from "./scene/createScene";
 import {
   comparableSamplesToScenePoints,
   orbitSamplesToScenePoints,
 } from "./scene/orbitTrace";
-import {
-  createUncertaintyEllipsoidGroup,
-  DEFAULT_UNCERTAINTY_OPTIONS,
-  type UncertaintyEllipsoidOptions,
-} from "./scene/uncertainty";
 import {
   DEFAULT_ORBIT_SETTINGS,
   normalizeOrbitSettings,
@@ -47,13 +38,7 @@ import {
 import { createOrbitControls } from "./ui/controls";
 import { createFrameControls } from "./ui/frameControls";
 import { createOrekitOverlayControls } from "./ui/orekitOverlayControls";
-import {
-  createUncertaintyControls,
-  type UncertaintyControlSettings,
-} from "./ui/uncertaintyControls";
 import "./uncertainty/fixtureChecks";
-import { ORB_SAT_1_SYNTHETIC_COVARIANCE } from "./uncertainty/orbSat1SyntheticCovariance";
-import type { CovarianceSeries } from "./uncertainty/types";
 import "./styles.css";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#scene");
@@ -69,21 +54,12 @@ const frameControls = createFrameControls(
   updatePropagationFrame,
 );
 const orekitControls = createOrekitOverlayControls(refreshOrekitSamples);
-const uncertaintyControls = createUncertaintyControls(
-  {
-    visible: DEFAULT_UNCERTAINTY_OPTIONS.visible,
-    sigma: DEFAULT_UNCERTAINTY_OPTIONS.sigma,
-    density: DEFAULT_UNCERTAINTY_OPTIONS.density,
-  },
-  updateUncertaintySettings,
-);
 const controlStack = document.createElement("div");
 controlStack.className = "control-stack";
 controlStack.append(
   controls.element,
   frameControls.element,
   orekitControls.element,
-  uncertaintyControls.element,
 );
 document.body.append(controlStack);
 
@@ -93,17 +69,11 @@ let localSamples: TleOrbitSample[] = [];
 let orekitSamples: OrekitOrbitSample[] = [];
 let sampleAlignment: SampleAlignment | null = null;
 let divergenceSeries: DivergenceSeries | null = null;
-let uncertaintySettings: UncertaintyControlSettings = {
-  visible: DEFAULT_UNCERTAINTY_OPTIONS.visible,
-  sigma: DEFAULT_UNCERTAINTY_OPTIONS.sigma,
-  density: DEFAULT_UNCERTAINTY_OPTIONS.density,
-};
 let orekitRequestId = 0;
 let localPoints = recomputeOrbit(currentSettings);
 let displayPoints = localPoints;
 let displayEpochs = localSamples.map((sample) => sample.epoch);
 let frame = 0;
-let lastCurrentUncertaintyEpoch = "";
 
 function updateOrbit(settings: OrbitSettings) {
   currentSettings = normalizeOrbitSettings(settings);
@@ -135,41 +105,6 @@ function recomputeOrbit(settings: OrbitSettings) {
   }
 
   return nextPoints;
-}
-
-function updateUncertaintySettings(settings: UncertaintyControlSettings) {
-  uncertaintySettings = settings;
-  uncertaintyControls.setSettings(uncertaintySettings);
-  refreshUncertaintyLayer();
-}
-
-function refreshUncertaintyLayer() {
-  lastCurrentUncertaintyEpoch = "";
-  const alignedSeries = alignCovarianceSeriesEpochs(
-    ORB_SAT_1_SYNTHETIC_COVARIANCE,
-    new Date(currentSettings.epochIso),
-  );
-  const uncertaintyEpochs = alignedSeries.samples.map(
-    (sample) => new Date(sample.epoch),
-  );
-  const nominalSamples = sampleTleOrbitAtEpochs(ISS_TLE, uncertaintyEpochs);
-  const currentEpoch = displayEpochs[frame];
-  const options: UncertaintyEllipsoidOptions = {
-    ...DEFAULT_UNCERTAINTY_OPTIONS,
-    ...uncertaintySettings,
-    currentEpoch: currentEpoch ?? uncertaintyEpochs[0],
-  };
-  const group = createUncertaintyEllipsoidGroup(
-    alignedSeries,
-    nominalSamples,
-    options,
-  );
-  orbitScene.setUncertaintyEllipsoids(group);
-  uncertaintyControls.setStatus({
-    frame: alignedSeries.frame.name,
-    provenance: alignedSeries.source.provenance,
-    visibleCount: group.children.length,
-  });
 }
 
 async function refreshOrekitSamples() {
@@ -267,7 +202,6 @@ function showLocalDisplay() {
   if (displayPoints[0]) {
     orbitScene.setSatellitePosition(displayPoints[0]);
   }
-  refreshUncertaintyLayer();
 }
 
 function showComparableDisplay() {
@@ -287,7 +221,6 @@ function showOrekitDisplayMode(
   if (displayPoints[0]) {
     orbitScene.setSatellitePosition(displayPoints[0]);
   }
-  refreshUncertaintyLayer();
 }
 
 function resize() {
@@ -305,13 +238,6 @@ function animate() {
     orbitScene.setSatellitePosition(point);
   }
   updateDivergenceReadout(displayEpochs[frame]);
-  if (uncertaintySettings.density === "current") {
-    const currentEpochKey = displayEpochs[frame]?.toISOString() ?? "";
-    if (currentEpochKey !== lastCurrentUncertaintyEpoch) {
-      lastCurrentUncertaintyEpoch = currentEpochKey;
-      refreshUncertaintyLayer();
-    }
-  }
 
   orbitScene.rotateEarth();
   orbitScene.render();
@@ -331,34 +257,7 @@ function updateDivergenceReadout(currentEpoch?: Date) {
   );
 }
 
-function alignCovarianceSeriesEpochs(
-  series: CovarianceSeries,
-  startEpoch: Date,
-): CovarianceSeries {
-  const fixtureStartTime = Date.parse(series.samples[0]?.epoch ?? "");
-
-  if (!Number.isFinite(fixtureStartTime)) {
-    return series;
-  }
-
-  return {
-    ...series,
-    samples: series.samples.map((sample) => {
-      const offsetMs = Date.parse(sample.epoch) - fixtureStartTime;
-      return {
-        ...sample,
-        epoch: toIsoNoMilliseconds(new Date(startEpoch.getTime() + offsetMs)),
-      };
-    }),
-  };
-}
-
-function toIsoNoMilliseconds(date: Date): string {
-  return date.toISOString().replace(".000", "");
-}
-
 window.addEventListener("resize", resize);
 window.addEventListener("beforeunload", () => orbitScene.dispose());
-refreshUncertaintyLayer();
 resize();
 animate();

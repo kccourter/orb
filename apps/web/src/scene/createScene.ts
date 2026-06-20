@@ -1,7 +1,6 @@
 import * as THREE from "three";
 
 import { updateOrbitTrace, type OrbitTrace } from "./orbitTrace";
-import { disposeUncertaintyEllipsoidGroup } from "./uncertainty";
 
 export const SCENE_CONSTANTS = {
   backgroundColor: 0x071014,
@@ -25,8 +24,6 @@ export type OrbitScene = {
   ) => void;
   clearTrace: (traceId: OrbitTraceId) => void;
   setSatellitePosition: (point: THREE.Vector3) => void;
-  setUncertaintyEllipsoids: (group: THREE.Group) => void;
-  clearUncertaintyEllipsoids: () => void;
   rotateEarth: () => void;
   resize: (width: number, height: number) => void;
   render: () => void;
@@ -66,9 +63,6 @@ export function createOrbitScene(canvas: HTMLCanvasElement): OrbitScene {
   };
   scene.add(traces["satellite-js"], traces.orekit);
 
-  let uncertaintyEllipsoids = new THREE.Group();
-  scene.add(uncertaintyEllipsoids);
-
   const satelliteMarker = new THREE.Mesh(
     new THREE.SphereGeometry(SCENE_CONSTANTS.satelliteRadiusUnits, 24, 12),
     new THREE.MeshStandardMaterial({
@@ -91,18 +85,6 @@ export function createOrbitScene(canvas: HTMLCanvasElement): OrbitScene {
     setSatellitePosition(point) {
       satelliteMarker.position.copy(point);
     },
-    setUncertaintyEllipsoids(group) {
-      scene.remove(uncertaintyEllipsoids);
-      disposeUncertaintyEllipsoidGroup(uncertaintyEllipsoids);
-      uncertaintyEllipsoids = group;
-      scene.add(uncertaintyEllipsoids);
-    },
-    clearUncertaintyEllipsoids() {
-      scene.remove(uncertaintyEllipsoids);
-      disposeUncertaintyEllipsoidGroup(uncertaintyEllipsoids);
-      uncertaintyEllipsoids = new THREE.Group();
-      scene.add(uncertaintyEllipsoids);
-    },
     rotateEarth() {
       earth.rotation.z += SCENE_CONSTANTS.earthRotationStepRadians;
     },
@@ -121,7 +103,6 @@ export function createOrbitScene(canvas: HTMLCanvasElement): OrbitScene {
         trace.geometry.dispose();
         trace.material.dispose();
       }
-      disposeUncertaintyEllipsoidGroup(uncertaintyEllipsoids);
       earth.material.dispose();
       satelliteMarker.material.dispose();
       renderer.dispose();

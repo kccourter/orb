@@ -10,9 +10,12 @@ orbit view is the wrong scale and frame for quantitative uncertainty. This
 increment should make the orbital view clean again while keeping the experiment
 available in the implementation record.
 
+Status: implemented. The orbital view no longer renders uncertainty controls or
+ellipsoid meshes.
+
 ## Recommended Direction
 
-Treat the orbital scene as a situational-awareness surface only:
+The orbital scene is treated as a situational-awareness surface only:
 
 - no uncertainty ellipsoid meshes;
 - no uncertainty controls in the orbital control stack;

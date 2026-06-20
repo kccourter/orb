@@ -198,3 +198,63 @@ Results:
   chunk-size warnings.
 - Wide viewport `2012x1215` with `3σ` + `Current`: controls stacked cleanly and
   the current ellipsoid is visibly rendered.
+
+## Increment 4: Back Out Uncertainty From Orbital View
+
+Status: implemented.
+
+### Outcome
+
+The global orbital view no longer renders uncertainty ellipsoids or uncertainty
+controls. It is back to orbit situational awareness: orbit sampling controls,
+frame controls, Orekit comparison controls, Earth, traces, and the satellite
+marker.
+
+Reusable uncertainty assets remain available for Increment 6:
+
+- frontend covariance types;
+- ORB-SAT-1 synthetic covariance fixture;
+- frontend fixture checks;
+- generic ellipsoid-building math under `apps/web/src/scene/uncertainty.ts`.
+
+### Artifacts
+
+- `apps/web/src/main.ts`
+- `apps/web/src/scene/createScene.ts`
+- `apps/web/src/styles.css`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- Deleted `apps/web/src/ui/uncertaintyControls.ts`
+- [ORBITAL_UNCERTAINTY_REMOVAL.md](ORBITAL_UNCERTAINTY_REMOVAL.md)
+
+### Implementation Notes
+
+- `main.ts` no longer imports the ORB-SAT-1 covariance fixture or ellipsoid
+  scene builder.
+- `createScene.ts` no longer owns an uncertainty mesh group.
+- The smoke suite now asserts that uncertainty controls are absent from the
+  orbital view.
+- Detailed covariance inspection is deferred to the local QSW explorer.
+
+### Validation
+
+Commands run:
+
+```sh
+apps/web/node_modules/.bin/tsc --noEmit
+apps/web/node_modules/.bin/vite build
+CI=true pnpm --dir apps/web smoke
+```
+
+Results:
+
+- TypeScript check: passed.
+- Vite build: passed, with the existing satellite.js browser-externalization and
+  chunk-size warnings.
+- Playwright smoke: 5 passed.
+
+Browser checks:
+
+- Desktop viewport `1280x800`: no uncertainty controls, clean control stack,
+  canvas rendered.
+- Narrow viewport `390x844`: no uncertainty controls, clean control stack,
+  canvas rendered.
