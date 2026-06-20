@@ -37,7 +37,8 @@ outside its intended freshness window.
    [SPACECRAFT.md](SPACECRAFT.md).
 2. Define uncertainty data model and covariance source strategy. Completed: see
    [UNCERTAINTY.md](UNCERTAINTY.md).
-3. Add uncertainty ellipsoid rendering from epoch through day 3.
+3. Add uncertainty ellipsoid rendering from epoch through day 3. Planned: see
+   [ELLIPSOID_RENDERING.md](ELLIPSOID_RENDERING.md).
 4. Investigate and prototype higher-fidelity ephemeris products.
 5. Prototype orbit-to-orbit intersection probability.
 6. Prototype orbit-to-WEZ ellipsoid intersection probability.

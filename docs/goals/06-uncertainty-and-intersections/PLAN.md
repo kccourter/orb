@@ -113,6 +113,9 @@ through day 3. Frontend rendering remains deferred to Increment 3.
 
 ## Increment 3: Ellipsoid Rendering From Epoch Through Day 3
 
+Status: Planned in [ELLIPSOID_RENDERING.md](ELLIPSOID_RENDERING.md); awaiting
+approval to implement.
+
 ### Objective
 
 Render uncertainty ellipsoids along the nominal propagated path at selectable
@@ -120,26 +123,39 @@ times from epoch through day 3.
 
 ### Scope
 
-- Convert covariance principal axes into Three.js ellipsoid geometry.
-- Render compact, translucent ellipsoids without occluding the nominal trace.
-- Add controls for sigma level, sample visibility, and time-window density.
-- Preserve frame labels in the UI state and avoid unlabeled ECI/ECEF language.
-- Verify desktop and narrow viewport behavior.
+- Add a typed frontend copy of the ORB-SAT-1 synthetic covariance fixture.
+- Convert `position_3x3` covariance principal axes into Three.js ellipsoid
+  geometry.
+- Anchor ellipsoid centers to the nearest displayed nominal orbit sample by
+  epoch.
+- Use QSW orientation from nominal position/velocity when available; document any
+  fallback as approximate.
+- Add compact controls for visibility, sigma level, and sample density.
+- Preserve `synthetic` and `QSW` labels in UI state.
+- Verify desktop and narrow viewport behavior, including nonblank canvas checks.
 
 ### Expected Files
 
 - `apps/web/src/main.ts`
-- Possible module: `apps/web/src/scene/uncertainty.ts`
-- Possible UI module under `apps/web/src/ui/`
-- CSS update if needed.
+- `apps/web/src/scene/uncertainty.ts`
+- `apps/web/src/uncertainty/types.ts`
+- `apps/web/src/uncertainty/orbSat1SyntheticCovariance.ts`
+- `apps/web/src/uncertainty/fixtureChecks.ts`
+- `apps/web/src/ui/uncertaintyControls.ts`
+- `apps/web/src/styles.css`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- `docs/goals/06-uncertainty-and-intersections/ELLIPSOID_RENDERING.md`
 - Goal docs update.
 
 ### Acceptance Criteria
 
 - Ellipsoids appear at expected sample times from epoch through day 3.
+- Users can toggle uncertainty, choose sigma level, and reduce visible sample
+  density.
 - The scene remains nonblank and usable with ellipsoids toggled on.
 - The nominal trace and Earth/frame context remain readable.
 - Users can distinguish synthetic uncertainty from imported uncertainty.
+- Ellipsoid geometry is disposed when refreshed or when the app unloads.
 
 ### Validation
 
@@ -150,8 +166,8 @@ times from epoch through day 3.
 
 ### Approval Question
 
-Approve the uncertainty visualization behavior before adding higher-fidelity
-ephemeris product experiments.
+Approve the frontend fixture copy, QSW-oriented ellipsoid rendering, visual gain,
+and compact uncertainty controls before implementation.
 
 ## Increment 4: Higher-Fidelity Ephemeris Product Investigation
 
