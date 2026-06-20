@@ -58,6 +58,9 @@ uncertainty assumptions unless project owner redirects.
 
 ## Increment 2: Uncertainty Model and Covariance Strategy
 
+Status: Planned in [UNCERTAINTY.md](UNCERTAINTY.md); awaiting approval to
+implement.
+
 ### Objective
 
 Define the minimum uncertainty representation needed for day-0 through day-3
@@ -65,18 +68,26 @@ ellipsoid visualization and later intersection math.
 
 ### Scope
 
-- Define covariance shape, units, frame, epoch, sigma level, and provenance.
-- Decide supported frames for covariance ingestion and display.
-- Choose the first covariance source strategy: synthetic growth model,
-  residual-estimated covariance from multiple products, imported covariance, or
-  a combination.
-- Define API and TypeScript types without committing to every future source.
+- Define a position-first covariance series with epoch, frame, units, matrix,
+  sigma, and provenance.
+- Use `position_3x3` covariance in `km^2` for the first implementation, while
+  reserving a future `cartesian_6x6` path.
+- Use `QSW` as the default synthetic ORB-SAT-1 covariance frame, with exact
+  frame labels required for all samples.
+- Start with a synthetic diagonal QSW growth model through 72 hours; label it as
+  synthetic rather than real OD quality.
+- Define API models and tests first; add TypeScript mirror types only if needed
+  before rendering.
 
 ### Expected Files
 
 - `src/orb_lab/models.py`
 - Possible module: `src/orb_lab/uncertainty.py`
-- Possible frontend type module under `apps/web/src/api/`
+- `tests/test_uncertainty_models.py`
+- `docs/goals/06-uncertainty-and-intersections/UNCERTAINTY.md`
+- `docs/goals/06-uncertainty-and-intersections/fixtures/orb-sat-1.synthetic-covariance.json`
+- Possible frontend type module under `apps/web/src/api/` if the fixture is
+  consumed by TypeScript in this increment.
 - Goal docs update.
 
 ### Acceptance Criteria
@@ -87,16 +98,21 @@ ellipsoid visualization and later intersection math.
   position-velocity covariance.
 - Synthetic covariance is clearly labeled when used.
 - Unsupported or unlabeled frames fail validation.
+- Invalid covariance shapes, asymmetric matrices, and invalid diagonal values
+  fail validation.
+- The ORB-SAT-1 synthetic day-3 covariance fixture validates.
 
 ### Validation
 
+- `uv run pytest tests/test_uncertainty_models.py`
 - `uv run pytest`
 - `uv run ruff check .`
 - `pnpm --dir apps/web check` if frontend types are touched.
 
 ### Approval Question
 
-Approve the uncertainty schema before rendering ellipsoids.
+Approve the `position_3x3` QSW synthetic covariance schema and ORB-SAT-1 day-3
+growth fixture before implementation.
 
 ## Increment 3: Ellipsoid Rendering From Epoch Through Day 3
 

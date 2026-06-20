@@ -35,7 +35,8 @@ outside its intended freshness window.
 
 1. Research and select the Goal 06 spacecraft target. Completed: see
    [SPACECRAFT.md](SPACECRAFT.md).
-2. Define uncertainty data model and covariance source strategy.
+2. Define uncertainty data model and covariance source strategy. Planned: see
+   [UNCERTAINTY.md](UNCERTAINTY.md).
 3. Add uncertainty ellipsoid rendering from epoch through day 3.
 4. Investigate and prototype higher-fidelity ephemeris products.
 5. Prototype orbit-to-orbit intersection probability.
