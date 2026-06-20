@@ -566,18 +566,28 @@ Make loader behavior repeatable and document the scenario workflow.
 - `CI=true pnpm --dir apps/web build`
 - `CI=true pnpm --dir apps/web smoke`
 - Manual scenario-load smoke test.
+- Implemented during Increment 6: finalized Goal 05 documentation, added
+  `RECORD.md`, marked Goal 05 complete in the README and goal index, and
+  recorded supported source behavior, frame/unit assumptions, validation
+  results, and deferred work.
+- Verified during Increment 6 with backend, data-enabled backend, frontend, and
+  live browser scenario-load validation recorded in `RECORD.md`.
 
 ### Approval Question
 
 Approve completion and decide the next exploration track.
 
-## Open Decisions
+## Deferred Decisions
 
-- Whether examples live only under `examples/scenarios/` or also under `tests/fixtures/scenarios/`.
-- Whether `POST /scenarios/normalize` accepts multipart files in Goal 05 or only text/JSON.
-- How much OEM/CCSDS parsing should be accepted before full Orekit data setup is mandatory.
-- Whether arbitrary initial-state propagation belongs in Goal 05 or a later dynamics goal.
-- Whether browser file upload is included in the first UI pass.
+- Goal 05 examples live under `examples/scenarios/`; add dedicated
+  `tests/fixtures/scenarios/` files later only if test data starts diverging
+  from documented examples.
+- `POST /scenarios/normalize` accepts text/JSON payloads in Goal 05. Multipart
+  file submission remains deferred.
+- OEM/CCSDS parsing is a narrow Orekit-data-enabled subset in Goal 05. Broader
+  CCSDS coverage remains deferred.
+- Arbitrary initial-state propagation belongs to a later dynamics goal.
+- Browser file upload is not included in the first UI pass.
 
 ## Not In Scope
 
