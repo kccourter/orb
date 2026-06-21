@@ -48,9 +48,10 @@ outside its intended freshness window.
    [LOCAL_QSW_UNCERTAINTY_EXPLORER.md](LOCAL_QSW_UNCERTAINTY_EXPLORER.md).
 7. Investigate and prototype higher-fidelity ephemeris products. Completed:
    see [EPHEMERIS_PRODUCTS.md](EPHEMERIS_PRODUCTS.md).
-8. Prototype orbit-to-orbit intersection probability.
-9. Prototype orbit-to-WEZ ellipsoid intersection probability.
-10. Record validation, assumptions, and remaining risks.
+8. Split controls from orbital rendering and add denser Earth meridian cues.
+9. Prototype orbit-to-orbit intersection probability.
+10. Prototype orbit-to-WEZ ellipsoid intersection probability.
+11. Record validation, assumptions, and remaining risks.
 
 See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 Implementation notes are tracked in [RECORD.md](RECORD.md).

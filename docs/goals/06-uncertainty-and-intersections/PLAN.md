@@ -569,7 +569,83 @@ Completed decision: make CCSDS OEM the first production-quality external
 ephemeris loader path, keep CPF as an adapter-only/deferred product category,
 and reserve CDM/POD covariance products for later intersection increments.
 
-## Increment 8: Orbit-to-Orbit Intersection Probability Prototype
+## Increment 8: Distinct Control and Render Panes
+
+Status: Proposed for approval.
+
+### Objective
+
+Stop control overlays from covering orbital visualization content, and make
+Earth rotation/precession cues easier to inspect at low apparent rates.
+
+The fixed-observer orbital view should read as an instrument surface with
+separate control and render regions, not as a canvas with floating panels laid
+over mission geometry.
+
+### Scope
+
+- Restructure the orbital view so controls, frame selection, and Orekit compare
+  status occupy a distinct pane or panes outside the render viewport.
+- Keep the Three.js canvas in a dedicated render pane with no controls layered
+  over Earth, orbit traces, node markers, or comparison lines.
+- Preserve the existing compact operational controls and current control
+  behavior.
+- Apply the layout to both desktop and narrow viewport sizes. On narrow
+  screens, stack controls and rendering vertically instead of allowing overlap.
+- Keep the local QSW explorer usable under the same top-level mode switch; only
+  adjust its layout if required by shared structure.
+- Add denser Earth longitude dividers or equivalent meridian cues so slow
+  rotation/precession is easier to perceive.
+- Keep the additional Earth reference lines visually subordinate to orbit
+  traces and node markers.
+- Update smoke tests to assert that the orbit canvas and control regions are
+  distinct and that mode switching still works.
+
+### Not In Scope
+
+- New propagation, frame, or Orekit comparison behavior.
+- Changing the fixed-observer camera anchoring decision.
+- Adding user camera controls.
+- Reworking the QSW uncertainty controls beyond layout compatibility.
+- Intersection probability UI.
+
+### Expected Files
+
+- `apps/web/src/main.ts`
+- `apps/web/src/scene/createScene.ts`
+- `apps/web/src/styles.css`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- Goal docs and record updates.
+
+### Acceptance Criteria
+
+- No orbital controls overlap rendered Earth, orbit traces, node markers, or
+  Orekit comparison imagery at desktop viewport sizes.
+- Narrow viewport layout keeps controls and rendering readable without
+  incoherent overlap.
+- The render pane remains nonblank and correctly framed after the layout
+  change.
+- Earth shows enough vertical meridian/reference dividers to make slow
+  precession or rotation visually legible.
+- Added dividers do not dominate the orbit trace or fixed ascending-node
+  marker.
+- Existing frame, sample, reset, Orekit refresh, and `Orbit` / `QSW` mode
+  controls continue to work.
+
+### Validation
+
+- `pnpm --dir apps/web check`
+- `pnpm --dir apps/web build`
+- `pnpm --dir apps/web smoke`
+- Browser checks at desktop and narrow viewport sizes confirming separated
+  panes, nonblank rendering, and readable Earth dividers.
+
+### Approval Question
+
+Approve this UI cleanup increment to split controls from orbital rendering and
+add denser Earth meridian cues before continuing with intersection prototypes.
+
+## Increment 9: Orbit-to-Orbit Intersection Probability Prototype
 
 ### Objective
 
@@ -611,7 +687,7 @@ uncertainties grow over time.
 
 Approve the first probability method before connecting it to UI workflows.
 
-## Increment 9: Orbit-to-WEZ Ellipsoid Intersection Prototype
+## Increment 10: Orbit-to-WEZ Ellipsoid Intersection Prototype
 
 ### Objective
 
@@ -653,7 +729,7 @@ WEZ ellipsoid over time.
 
 Approve the WEZ geometry semantics before adding persistent scenario fixtures.
 
-## Increment 10: Records, Fixtures, and Completion Pass
+## Increment 11: Records, Fixtures, and Completion Pass
 
 ### Objective
 
