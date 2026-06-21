@@ -18,13 +18,13 @@ export function createOrbitControls(
 
   const form = document.createElement("form");
   form.className = "orbit-controls";
-  form.setAttribute("aria-label", "Orbit sampling controls");
+  form.setAttribute("aria-label", "Orbit preview controls");
 
   const epochInput = createTextInput("Epoch", currentSettings.epochIso);
   epochInput.input.dataset.testid = "epoch-input";
 
   const durationInput = createNumberInput(
-    "Duration",
+    "Preview",
     currentSettings.durationMinutes,
     ORBIT_SETTING_LIMITS.durationMinutes.min,
     ORBIT_SETTING_LIMITS.durationMinutes.max,
@@ -34,7 +34,7 @@ export function createOrbitControls(
   durationInput.input.dataset.testid = "duration-input";
 
   const stepInput = createNumberInput(
-    "Step",
+    "Sample",
     currentSettings.stepSeconds,
     ORBIT_SETTING_LIMITS.stepSeconds.min,
     ORBIT_SETTING_LIMITS.stepSeconds.max,

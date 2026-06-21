@@ -1,0 +1,9 @@
+{
+  "name": "Manual EME2000 state",
+  "objectId": "manual-demo-001",
+  "epoch": "2024-06-21T13:31:24Z",
+  "frame": "EME2000",
+  "origin": "geocentric",
+  "positionKm": [7000.0, 0.0, 0.0],
+  "velocityKmS": [0.0, 7.5, 0.0]
+}

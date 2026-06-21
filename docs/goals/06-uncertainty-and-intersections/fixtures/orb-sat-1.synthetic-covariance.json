@@ -1,0 +1,92 @@
+{
+  "object_id": "orb-sat-1",
+  "series_id": "orb-sat-1-synthetic-day3-qsw-v1",
+  "source": {
+    "type": "synthetic_growth",
+    "provenance": "synthetic",
+    "description": "Synthetic 1-sigma QSW position covariance growth for ORB-SAT-1 from epoch through day 3. This fixture is for visualization and intersection math development, not real orbit determination."
+  },
+  "frame": {
+    "name": "QSW",
+    "origin": "spacecraft",
+    "reference": "nominal_state"
+  },
+  "units": {
+    "position": "km",
+    "position_covariance": "km^2"
+  },
+  "samples": [
+    {
+      "epoch": "2026-06-20T00:00:00Z",
+      "covariance_type": "position_3x3",
+      "covariance_sigma": 1,
+      "position_covariance": [
+        [0.000001, 0.0, 0.0],
+        [0.0, 0.000004, 0.0],
+        [0.0, 0.0, 0.000001]
+      ],
+      "provenance": "synthetic",
+      "confidence_label": "1-sigma synthetic covariance"
+    },
+    {
+      "epoch": "2026-06-20T06:00:00Z",
+      "covariance_type": "position_3x3",
+      "covariance_sigma": 1,
+      "position_covariance": [
+        [0.0004, 0.0, 0.0],
+        [0.0, 0.01, 0.0],
+        [0.0, 0.0, 0.0009]
+      ],
+      "provenance": "synthetic",
+      "confidence_label": "1-sigma synthetic covariance"
+    },
+    {
+      "epoch": "2026-06-20T12:00:00Z",
+      "covariance_type": "position_3x3",
+      "covariance_sigma": 1,
+      "position_covariance": [
+        [0.0025, 0.0, 0.0],
+        [0.0, 0.09, 0.0],
+        [0.0, 0.0, 0.0064]
+      ],
+      "provenance": "synthetic",
+      "confidence_label": "1-sigma synthetic covariance"
+    },
+    {
+      "epoch": "2026-06-21T00:00:00Z",
+      "covariance_type": "position_3x3",
+      "covariance_sigma": 1,
+      "position_covariance": [
+        [0.0225, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0625]
+      ],
+      "provenance": "synthetic",
+      "confidence_label": "1-sigma synthetic covariance"
+    },
+    {
+      "epoch": "2026-06-22T00:00:00Z",
+      "covariance_type": "position_3x3",
+      "covariance_sigma": 1,
+      "position_covariance": [
+        [0.25, 0.0, 0.0],
+        [0.0, 25.0, 0.0],
+        [0.0, 0.0, 0.64]
+      ],
+      "provenance": "synthetic",
+      "confidence_label": "1-sigma synthetic covariance"
+    },
+    {
+      "epoch": "2026-06-23T00:00:00Z",
+      "covariance_type": "position_3x3",
+      "covariance_sigma": 1,
+      "position_covariance": [
+        [1.0, 0.0, 0.0],
+        [0.0, 225.0, 0.0],
+        [0.0, 0.0, 4.0]
+      ],
+      "provenance": "synthetic",
+      "confidence_label": "1-sigma synthetic covariance"
+    }
+  ]
+}

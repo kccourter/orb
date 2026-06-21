@@ -2,12 +2,13 @@
 
 ## Objective
 
-Start visualizing propagation uncertainty over time and investigate probability
-of intersection with other uncertain or modeled regions.
+Start visualizing propagation uncertainty over time and prepare the project for
+later probability-of-intersection work with other uncertain or modeled regions.
 
-This goal should move Orb Lab from deterministic traces toward uncertainty-aware
-scenario inspection: covariance growth, ellipsoid rendering, higher-fidelity
-ephemeris inputs, and first-pass intersection probability experiments.
+This goal moves Orb Lab from deterministic traces toward uncertainty-aware
+scenario inspection: covariance growth, local ellipsoid rendering,
+higher-fidelity ephemeris inputs, and UI structure for future probability
+experiments.
 
 ## Why Sixth
 
@@ -22,50 +23,67 @@ outside its intended freshness window.
   drag, maneuver, and data-availability assumptions.
 - The project has a compact uncertainty model that can represent position
   covariance from epoch through day 3.
-- The Three.js scene can render uncertainty ellipsoids along a propagated trace
-  without hiding the nominal orbit or frame context.
+- The app can inspect uncertainty ellipsoids in a local QSW explorer without
+  hiding nominal orbit or frame context in the global orbital view.
 - The investigation records how OEM, CPF, and other POD-like products could
   reduce reliance on TLE-only workflows.
-- The project has a first-pass method for estimating intersection probability
-  between two uncertain orbital states.
-- The project has a first-pass method for estimating intersection probability
-  between an uncertain orbital state and a modeled WEZ ellipsoid.
+- Follow-up intersection probability prototypes are deferred into
+  top-level [DEFERRED_TASKS.md](../../../DEFERRED_TASKS.md).
 
 ## Proposed Increments
 
-1. Research and select the Goal 06 spacecraft target.
-2. Define uncertainty data model and covariance source strategy.
-3. Add uncertainty ellipsoid rendering from epoch through day 3.
-4. Investigate and prototype higher-fidelity ephemeris products.
-5. Prototype orbit-to-orbit intersection probability.
-6. Prototype orbit-to-WEZ ellipsoid intersection probability.
-7. Record validation, assumptions, and remaining risks.
+1. Research and select the Goal 06 spacecraft target. Completed: see
+   [SPACECRAFT.md](SPACECRAFT.md).
+2. Define uncertainty data model and covariance source strategy. Completed: see
+   [UNCERTAINTY.md](UNCERTAINTY.md).
+3. Add uncertainty ellipsoid rendering from epoch through day 3. Completed as
+   an experiment; see
+   [ELLIPSOID_RENDERING.md](ELLIPSOID_RENDERING.md).
+4. Back out uncertainty displays from the orbital view. Completed: see
+   [ORBITAL_UNCERTAINTY_REMOVAL.md](ORBITAL_UNCERTAINTY_REMOVAL.md).
+5. Modify the orbital display into a fixed-observer situation view. Completed:
+   see [FIXED_OBSERVER_ORBIT_VIEW.md](FIXED_OBSERVER_ORBIT_VIEW.md).
+6. Create a local QSW uncertainty explorer display. Completed: see
+   [LOCAL_QSW_UNCERTAINTY_EXPLORER.md](LOCAL_QSW_UNCERTAINTY_EXPLORER.md).
+7. Investigate and prototype higher-fidelity ephemeris products. Completed:
+   see [EPHEMERIS_PRODUCTS.md](EPHEMERIS_PRODUCTS.md).
+8. Split controls from orbital rendering and add denser Earth meridian cues.
+   Completed: see [RECORD.md](RECORD.md).
+9. Record validation, assumptions, and remaining risks. Completed: see
+   [RECORD.md](RECORD.md).
+
+Deferred intersection prototypes are tracked in top-level
+[DEFERRED_TASKS.md](../../../DEFERRED_TASKS.md).
 
 See [PLAN.md](PLAN.md) for approval-sized implementation increments.
+Implementation notes are tracked in [RECORD.md](RECORD.md).
 
 ## Initial Research Notes
 
-### Spacecraft Candidates
+### Spacecraft Selection
 
-The initial recommendation is to evaluate these candidates before committing:
+Increment 1 recommends **ORB-SAT-1** as the primary spacecraft under inspection:
+a synthetic agile LEO reference spacecraft that combines PRISMA-like physical
+and maneuver assumptions with GRACE-FO-inspired drag/POD uncertainty research.
 
-- GRACE-FO 1 or 2: smaller LEO spacecraft than ISS, public mission literature,
-  precise GPS tracking, accelerometer data for non-gravitational force
-  separation, laser ranging, and a strong POD research ecosystem. This is likely
-  the best data-rich proxy for uncertainty and drag modeling, but it is not an
-  agile inspection spacecraft.
-- Sentinel-2A/B/C: active LEO Earth-observation spacecraft with well-known
-  public mission geometry and consistent sun-synchronous operations. Better
-  operational continuity than GRACE-FO, but less attractive for drag and delta-v
-  model transparency.
-- SkySat-class commercial imaging spacecraft: closer to the desired small,
-  agile LEO inspection profile and includes propulsion on later spacecraft, but
-  mass properties, drag area, maneuver authority, and POD products are less
-  openly documented.
+- ORB-SAT-1: best primary target because it gives Orb Lab one coherent
+  spacecraft identity while requiring explicit provenance labels for synthetic,
+  derived, published-reference, and calibrated-reference parameters.
+- PRISMA Mango: best physical/agility reference because it is a small LEO
+  formation-flying and rendezvous demonstrator with public mass, dimensions,
+  orbit class, and propulsion heritage; used as the physical/agility reference.
+- GRACE-FO 1/2: best reference target for drag and precise-orbit research
+  because of public accelerometer, GNSS, KBR/LRI, and POD ecosystem context;
+  used as the drag/POD uncertainty reference.
+- Sentinel-2A/B/C: useful operational LEO reference, but larger and less
+  inspection-like.
+- SkySat-class commercial imaging spacecraft: closer to a modern taskable agile
+  LEO spacecraft, but public mass-property, drag-area, and maneuver-authority
+  details are too thin for the first model.
 
-The plan should favor a spacecraft with public physical and tracking data over a
-spacecraft that merely sounds agile. A poor physical model would make the
-uncertainty visualization look precise while teaching the wrong lesson.
+See [SPACECRAFT.md](SPACECRAFT.md) for assumption labels, gaps, and references.
+The first ORB-SAT-1 metadata fixture lives at
+[fixtures/orb-sat-1.spacecraft.json](fixtures/orb-sat-1.spacecraft.json).
 
 ### Data Product Leads
 
@@ -110,11 +128,9 @@ uncertainty visualization look precise while teaching the wrong lesson.
   higher-fidelity products.
 - Covariance in Cartesian ECI/TEME coordinates can become misleading under
   nonlinear propagation; local orbital-frame display may be clearer.
-- Probability-of-intersection results can look authoritative even when the
-  assumptions are intentionally first-pass.
-- WEZ modeling can become a domain rabbit hole. Keep the first model purely
-  geometric: an ellipsoid with frame, center, covariance-like axes, and time
-  validity.
+- Probability-of-intersection and WEZ modeling are deferred to a focused
+  follow-up branch. Keep the first later WEZ model purely geometric: an
+  ellipsoid with frame, center, covariance-like axes, and time validity.
 
 ## Validation
 
@@ -123,8 +139,8 @@ uncertainty visualization look precise while teaching the wrong lesson.
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
 - `pnpm --dir apps/web smoke`
-- Manual browser checks at desktop and narrow viewport sizes for nonblank,
-  correctly framed uncertainty ellipsoids.
+- Manual browser checks at desktop and narrow viewport sizes for nonblank
+  orbital and local QSW render panes.
 
 ## References Checked
 

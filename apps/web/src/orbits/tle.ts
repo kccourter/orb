@@ -81,3 +81,43 @@ export function sampleTleOrbit(
 
   return samples;
 }
+
+export function sampleTleOrbitAtEpochs(
+  tle: TleInput,
+  epochs: readonly Date[],
+): TleOrbitSample[] {
+  const satrec = twoline2satrec(tle.line1, tle.line2);
+  const samples: TleOrbitSample[] = [];
+
+  for (const epoch of epochs) {
+    const propagated = propagate(satrec, epoch);
+
+    if (
+      !propagated ||
+      !propagated.position ||
+      typeof propagated.position === "boolean" ||
+      !propagated.velocity ||
+      typeof propagated.velocity === "boolean"
+    ) {
+      continue;
+    }
+
+    samples.push({
+      epoch,
+      source: tle.source,
+      frame: SATELLITE_JS_FRAME,
+      positionKm: {
+        x: propagated.position.x,
+        y: propagated.position.y,
+        z: propagated.position.z,
+      },
+      velocityKmPerSecond: {
+        x: propagated.velocity.x,
+        y: propagated.velocity.y,
+        z: propagated.velocity.z,
+      },
+    });
+  }
+
+  return samples;
+}

@@ -9,6 +9,65 @@ test("renders the orbit scene to a nonblank canvas", async ({ page }) => {
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 
+test("keeps orbital controls outside the render pane", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  const controlPane = page.getByTestId("control-pane");
+  const renderPane = page.getByTestId("render-pane");
+  const canvas = page.locator("#scene");
+
+  await expect(controlPane).toBeVisible();
+  await expect(renderPane).toBeVisible();
+  await expect(canvas).toBeVisible();
+
+  await expect(canvas).toBeInViewport();
+  await expect(page.getByLabel("Orbit preview controls")).toBeVisible();
+  await expect(page.getByLabel("Propagation frame controls")).toBeVisible();
+  await expect(page.getByLabel("Orekit overlay controls")).toBeVisible();
+
+  const boxes = await page.evaluate(() => {
+    const controlBounds = document
+      .querySelector<HTMLElement>('[data-testid="control-pane"]')
+      ?.getBoundingClientRect();
+    const renderBounds = document
+      .querySelector<HTMLElement>('[data-testid="render-pane"]')
+      ?.getBoundingClientRect();
+    const canvasBounds = document
+      .querySelector<HTMLCanvasElement>("#scene")
+      ?.getBoundingClientRect();
+
+    if (!controlBounds || !renderBounds || !canvasBounds) {
+      return null;
+    }
+
+    return {
+      control: rectToObject(controlBounds),
+      render: rectToObject(renderBounds),
+      canvas: rectToObject(canvasBounds),
+    };
+
+    function rectToObject(rect: DOMRect) {
+      return {
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+      };
+    }
+  });
+
+  expect(boxes).not.toBeNull();
+  expect(boxes?.control.right).toBeLessThanOrEqual(boxes?.render.left ?? 0);
+  expect(boxes?.canvas.left).toBeGreaterThanOrEqual(boxes?.render.left ?? 0);
+  expect(boxes?.canvas.right).toBeLessThanOrEqual(boxes?.render.right ?? 0);
+  expect(boxes?.canvas.top).toBeGreaterThanOrEqual(boxes?.render.top ?? 0);
+  expect(boxes?.canvas.bottom).toBeLessThanOrEqual(boxes?.render.bottom ?? 0);
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
 test("recomputes the orbit from sampling controls", async ({ page }) => {
   await page.goto("/");
 
@@ -17,6 +76,10 @@ test("recomputes the orbit from sampling controls", async ({ page }) => {
   const stepInput = page.getByTestId("step-input");
   const resetButton = page.getByTestId("reset-settings");
 
+  const orbitControls = page.getByLabel("Orbit preview controls");
+  await expect(orbitControls).toBeVisible();
+  await expect(orbitControls.getByText("Preview")).toBeVisible();
+  await expect(orbitControls.getByText("Sample")).toBeVisible();
   await expect(epochInput).toHaveValue("2024-06-21T13:31:24Z");
   await expect(durationInput).toHaveValue("92.5");
   await expect(stepInput).toHaveValue("30");
@@ -29,6 +92,77 @@ test("recomputes the orbit from sampling controls", async ({ page }) => {
   await resetButton.click();
   await expect(durationInput).toHaveValue("92.5");
   await expect(stepInput).toHaveValue("30");
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
+test("keeps uncertainty controls out of the orbital view", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByTestId("uncertainty-toggle")).toHaveCount(0);
+  await expect(page.getByTestId("uncertainty-sigma")).toHaveCount(0);
+  await expect(page.getByTestId("uncertainty-density")).toHaveCount(0);
+  await expect(page.getByTestId("uncertainty-status")).toHaveCount(0);
+  await expect(page.getByTestId("local-uncertainty-scene")).toBeHidden();
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
+test("opens the local QSW uncertainty explorer", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByTestId("local-view").click();
+
+  await expect(page.locator("#scene")).toBeHidden();
+  await expect(page.getByTestId("local-uncertainty-scene")).toBeVisible();
+  await expect(page.getByLabel("Local QSW uncertainty controls")).toBeVisible();
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "QSW",
+  );
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "synthetic",
+  );
+  expect(
+    await countNonBlankCanvasPixels(page, "#local-uncertainty-scene"),
+  ).toBeGreaterThan(0);
+
+  await page.getByTestId("local-uncertainty-time").fill("0.5");
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "+0.50h",
+  );
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "interpolated",
+  );
+
+  await page.getByTestId("local-uncertainty-speed").selectOption("60");
+  await page.getByTestId("local-uncertainty-play").click();
+  await expect(page.getByTestId("local-uncertainty-play")).toHaveText("Pause");
+  await page.waitForTimeout(300);
+  const animatedOffset = Number(
+    await page.getByTestId("local-uncertainty-time").inputValue(),
+  );
+  expect(animatedOffset).toBeGreaterThan(0.5);
+  await page.getByTestId("local-uncertainty-play").click();
+  await expect(page.getByTestId("local-uncertainty-play")).toHaveText("Play");
+
+  await page.getByTestId("local-uncertainty-time").fill("72");
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "+72.0h",
+  );
+
+  await page.getByTestId("local-uncertainty-sigma").selectOption("3");
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "45.0 km",
+  );
+
+  await page.getByTestId("local-view-q").click();
+  await expect(page.getByTestId("local-view-q")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+
+  await page.getByTestId("global-view").click();
+  await expect(page.locator("#scene")).toBeVisible();
+  await expect(page.getByTestId("local-uncertainty-scene")).toBeHidden();
+  await expect(page.getByTestId("uncertainty-toggle")).toHaveCount(0);
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 
@@ -176,9 +310,123 @@ test("sends selected propagation frame and clears stale Orekit state", async ({
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 
-async function countNonBlankCanvasPixels(page: Page): Promise<number> {
-  const nonBlankPixels = await page.waitForFunction(() => {
-    const scene = document.querySelector<HTMLCanvasElement>("#scene");
+test("loads scenario examples and uses the selected TLE for refresh", async ({
+  page,
+}) => {
+  await routeScenarioExamples(page);
+
+  await page.route("http://127.0.0.1:8000/scenarios/examples/iss-tle", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: issTleScenarioResponse(),
+    });
+  });
+
+  await page.route("http://127.0.0.1:8000/propagate/tle", async (route) => {
+    const request = route.request();
+    const payload = request.postDataJSON();
+
+    expect(payload.tle.name).toBe("ISS (ZARYA)");
+    expect(payload.tle.line1).toContain("25544U");
+
+    await route.fulfill({
+      contentType: "application/json",
+      json: {
+        source: {
+          type: "tle",
+          name: "ISS (ZARYA)",
+          propagator: "orekit-tle",
+        },
+        frame: {
+          name: "TEME",
+          authority: "orekit",
+          is_native: true,
+        },
+        units: {
+          position: "km",
+          velocity: "km/s",
+        },
+        sampling: {
+          start_epoch: "2024-06-21T13:31:24Z",
+          duration_minutes: 92.5,
+          step_seconds: 30,
+          sample_count: 2,
+        },
+        samples: [
+          {
+            epoch: "2024-06-21T13:31:24Z",
+            position_km: [1, 2, 3],
+            velocity_km_s: [4, 5, 6],
+          },
+          {
+            epoch: "2024-06-21T13:31:54Z",
+            position_km: [2, 3, 4],
+            velocity_km_s: [5, 6, 7],
+          },
+        ],
+      },
+    });
+  });
+
+  await page.goto("/");
+
+  await expect(page.getByTestId("scenario-select")).toHaveValue("iss-tle");
+  await expect(page.getByTestId("scenario-status")).toHaveText(
+    "ISS (ZARYA) loaded",
+  );
+  await expect(page.getByTestId("scenario-metadata")).toContainText("tle");
+  await expect(page.getByTestId("scenario-metadata")).toContainText("TEME");
+
+  await page.getByTestId("refresh-orekit").click();
+  await expect(page.getByTestId("orekit-status")).toHaveText(
+    "Orekit TEME: 2 samples",
+  );
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
+test("shows scenario load errors without blanking the scene", async ({ page }) => {
+  await routeScenarioExamples(page);
+
+  await page.route("http://127.0.0.1:8000/scenarios/examples/iss-tle", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: issTleScenarioResponse(),
+    });
+  });
+
+  await page.route("http://127.0.0.1:8000/scenarios/examples/iss-oem", async (route) => {
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      json: {
+        error: {
+          code: "orekit_unavailable",
+          message: "OREKIT_DATA_PATH is required for OEM parsing.",
+        },
+      },
+    });
+  });
+
+  await page.goto("/");
+  await expect(page.getByTestId("scenario-status")).toHaveText(
+    "ISS (ZARYA) loaded",
+  );
+
+  await page.getByTestId("scenario-select").selectOption("iss-oem");
+  await page.getByTestId("load-scenario").click();
+
+  await expect(page.getByTestId("scenario-status")).toHaveText(
+    "OREKIT_DATA_PATH is required for OEM parsing.",
+  );
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
+async function countNonBlankCanvasPixels(
+  page: Page,
+  selector = "#scene",
+): Promise<number> {
+  const nonBlankPixels = await page.waitForFunction((targetSelector) => {
+    const scene = document.querySelector<HTMLCanvasElement>(targetSelector);
     const context = scene?.getContext("webgl2") ?? scene?.getContext("webgl");
 
     if (!scene || !context || scene.width === 0 || scene.height === 0) {
@@ -214,7 +462,59 @@ async function countNonBlankCanvasPixels(page: Page): Promise<number> {
     }
 
     return nonBackgroundPixels;
-  });
+  }, selector);
 
   return nonBlankPixels.jsonValue();
+}
+
+async function routeScenarioExamples(page: Page): Promise<void> {
+  await page.route("http://127.0.0.1:8000/scenarios/examples", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      json: [
+        {
+          id: "iss-tle",
+          name: "ISS (ZARYA)",
+          source_type: "tle",
+          format: "tle",
+          frame: "TEME",
+        },
+        {
+          id: "iss-oem",
+          name: "ISS OEM sample",
+          source_type: "oem_ccsds",
+          format: "ccsds-oem",
+          frame: "EME2000",
+        },
+      ],
+    });
+  });
+}
+
+function issTleScenarioResponse() {
+  return {
+    id: "iss-tle",
+    name: "ISS (ZARYA)",
+    source: {
+      type: "tle",
+      format: "tle",
+      object_id: "25544",
+      raw: "ISS (ZARYA)\n1 25544U 98067A   24173.56347222  .00020137  00000+0  35155-3 0  9993\n2 25544  51.6390 336.0970 0007833  50.2065  79.8843 15.50417852458913",
+    },
+    frame: {
+      name: "TEME",
+      origin: "geocentric",
+    },
+    units: {
+      position: "km",
+      velocity: "km/s",
+    },
+    tle: {
+      line1:
+        "1 25544U 98067A   24173.56347222  .00020137  00000+0  35155-3 0  9993",
+      line2:
+        "2 25544  51.6390 336.0970 0007833  50.2065  79.8843 15.50417852458913",
+    },
+    samples: [],
+  };
 }
