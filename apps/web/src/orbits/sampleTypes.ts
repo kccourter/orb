@@ -1,7 +1,7 @@
 import type { OrekitOrbitSample } from "../api/propagation";
 import type { TleOrbitSample } from "./tle";
 
-export type OrbitSampleSource = "satellite-js" | "orekit";
+export type OrbitSampleSource = "satellite-js" | "orekit" | "scenario";
 
 export type CartesianVectorKm = {
   x: number;

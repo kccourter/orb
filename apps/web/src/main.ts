@@ -3,6 +3,12 @@ import {
   fetchTlePropagation,
   type OrekitOrbitSample,
 } from "./api/propagation";
+import {
+  fetchScenarioExample,
+  fetchScenarioExamples,
+  type NormalizedScenario,
+  type ScenarioStateSample,
+} from "./api/scenarios";
 import "./orbits/fixtureChecks";
 import { ISS_TLE } from "./orbits/fixtures";
 import {
@@ -20,9 +26,11 @@ import {
 } from "./orbits/divergence";
 import {
   orekitSampleToComparable,
+  normalizeEpochIso,
   satelliteJsSampleToComparable,
+  type ComparableOrbitSample,
 } from "./orbits/sampleTypes";
-import { sampleTleOrbit, type TleOrbitSample } from "./orbits/tle";
+import { sampleTleOrbit, type TleInput, type TleOrbitSample } from "./orbits/tle";
 import { createOrbitScene } from "./scene/createScene";
 import {
   createLocalUncertaintyExplorerScene,
@@ -41,6 +49,12 @@ import {
   type OrbitSettings,
 } from "./state/orbitSettings";
 import {
+  DEFAULT_SCENARIO_ID,
+  stateFromNormalizedScenario,
+  type ActiveScenarioState,
+  type ScenarioDisplayMode,
+} from "./state/scenarioState";
+import {
   DEFAULT_PROPAGATION_FRAME,
   labelForPropagationFrame,
   type PropagationFrameRequest,
@@ -52,6 +66,7 @@ import {
   type LocalUncertaintySettings,
 } from "./ui/localUncertaintyControls";
 import { createOrekitOverlayControls } from "./ui/orekitOverlayControls";
+import { createScenarioControls } from "./ui/scenarioControls";
 import { ORB_SAT_1_SYNTHETIC_COVARIANCE } from "./uncertainty/orbSat1SyntheticCovariance";
 import "./uncertainty/fixtureChecks";
 import "./styles.css";
@@ -97,6 +112,7 @@ const frameControls = createFrameControls(
   DEFAULT_PROPAGATION_FRAME,
   updatePropagationFrame,
 );
+const scenarioControls = createScenarioControls(loadScenarioExample);
 const orekitControls = createOrekitOverlayControls(refreshOrekitSamples);
 const localUncertaintyControls = createLocalUncertaintyControls(
   ORB_SAT_1_SYNTHETIC_COVARIANCE,
@@ -108,6 +124,7 @@ controlStack.className = "control-stack";
 controlStack.append(
   controls.element,
   frameControls.element,
+  scenarioControls.element,
   orekitControls.element,
 );
 controlPane.append(
@@ -119,6 +136,9 @@ controlPane.append(
 let appView: AppView = "global";
 let currentSettings = normalizeOrbitSettings(DEFAULT_ORBIT_SETTINGS);
 let currentFrame: PropagationFrameRequest = DEFAULT_PROPAGATION_FRAME;
+let activeTle: TleInput | undefined = ISS_TLE;
+let activeScenarioState: ActiveScenarioState | null = null;
+let activeDisplayMode: ScenarioDisplayMode = "tle-preview";
 let localSamples: TleOrbitSample[] = [];
 let orekitSamples: OrekitOrbitSample[] = [];
 let sampleAlignment: SampleAlignment | null = null;
@@ -135,24 +155,34 @@ setAppView("global");
 
 function updateOrbit(settings: OrbitSettings) {
   currentSettings = normalizeOrbitSettings(settings);
-  localPoints = recomputeOrbit(currentSettings);
+
+  if (activeDisplayMode === "tle-preview") {
+    localPoints = recomputeOrbit(currentSettings);
+    showLocalDisplay();
+  } else if (activeScenarioState) {
+    showScenarioSampleDisplay(activeScenarioState.scenario);
+  }
+
+  clearOrekitComparison(orekitRefreshMessage(), { preserveDisplay: true });
   frame = 0;
-  showLocalDisplay();
-  clearOrekitComparison("Refresh Orekit");
 }
 
 function updatePropagationFrame(nextFrame: PropagationFrameRequest) {
   currentFrame = nextFrame;
   frameControls.setFrame(currentFrame);
-  clearOrekitComparison(`Refresh ${labelForPropagationFrame(currentFrame)}`);
+  clearOrekitComparison(orekitRefreshMessage(), { preserveDisplay: true });
 }
 
 function recomputeOrbit(settings: OrbitSettings) {
   const normalizedSettings = normalizeOrbitSettings(settings);
   controls?.setSettings(normalizedSettings);
 
+  if (!activeTle) {
+    return [];
+  }
+
   localSamples = sampleTleOrbit(
-    ISS_TLE,
+    activeTle,
     toTlePropagationSettings(normalizedSettings),
   );
   const nextPoints = orbitSamplesToScenePoints(localSamples);
@@ -205,13 +235,22 @@ function setAppView(nextView: AppView) {
 }
 
 async function refreshOrekitSamples() {
+  if (!activeTle) {
+    orekitControls.setStatus({
+      status: "error",
+      message: "Active scenario has no TLE propagation input.",
+    });
+    orekitControls.setDivergenceSummary(null);
+    return;
+  }
+
   const requestId = orekitRequestId + 1;
   orekitRequestId = requestId;
 
   orekitControls.setStatus({ status: "loading" });
 
   const result = await fetchTlePropagation(
-    buildTlePropagationRequest(ISS_TLE, currentSettings, currentFrame),
+    buildTlePropagationRequest(activeTle, currentSettings, currentFrame),
   );
 
   if (requestId !== orekitRequestId) {
@@ -276,12 +315,17 @@ async function refreshOrekitSamples() {
   updateDivergenceReadout(displayEpochs[frame]);
 }
 
-function clearOrekitComparison(message: string) {
+function clearOrekitComparison(
+  message: string,
+  options: { preserveDisplay?: boolean } = {},
+) {
   orekitRequestId += 1;
   orekitSamples = [];
   sampleAlignment = null;
   divergenceSeries = null;
-  showLocalDisplay();
+  if (!options.preserveDisplay) {
+    showLocalDisplay();
+  }
   orbitScene.clearTrace("orekit");
   orekitControls.setStatus({
     status: "idle",
@@ -289,6 +333,69 @@ function clearOrekitComparison(message: string) {
   });
   orekitControls.setLegend("Local / Orekit");
   orekitControls.setDivergenceSummary(null);
+}
+
+async function loadScenarioExamples() {
+  scenarioControls.setStatus({
+    status: "loading",
+    message: "Loading scenarios",
+  });
+
+  const result = await fetchScenarioExamples();
+
+  if (!result.ok) {
+    scenarioControls.setExamples([]);
+    scenarioControls.setStatus({
+      status: "error",
+      message: result.message,
+    });
+    return;
+  }
+
+  scenarioControls.setExamples(result.response);
+  await loadScenarioExample(DEFAULT_SCENARIO_ID);
+}
+
+async function loadScenarioExample(exampleId: string) {
+  scenarioControls.setStatus({
+    status: "loading",
+    message: "Loading scenario",
+  });
+
+  const result = await fetchScenarioExample(exampleId);
+
+  if (!result.ok) {
+    scenarioControls.setStatus({
+      status: "error",
+      message: result.message,
+    });
+    return;
+  }
+
+  applyScenario(result.response);
+}
+
+function applyScenario(scenario: NormalizedScenario) {
+  const nextState = stateFromNormalizedScenario(scenario);
+  activeScenarioState = nextState;
+  activeDisplayMode = nextState.displayMode;
+  scenarioControls.setStatus({
+    status: "ready",
+    scenario,
+  });
+
+  if (nextState.activeTle) {
+    activeTle = nextState.activeTle;
+    localPoints = recomputeOrbit(currentSettings);
+    showLocalDisplay();
+  } else {
+    activeTle = undefined;
+    localSamples = [];
+    showScenarioSampleDisplay(scenario);
+  }
+
+  clearOrekitComparison(orekitRefreshMessage(), { preserveDisplay: true });
+  frame = 0;
 }
 
 function showLocalDisplay() {
@@ -328,6 +435,57 @@ function centerDisplayOnAscendingNode(samples: readonly NodeSearchSample[]) {
       ? positionKmToScenePoint(ascendingNodePositionKm)
       : positionKmToScenePoint({ x: 0, y: 0, z: 0 }),
   );
+}
+
+function showScenarioSampleDisplay(scenario: NormalizedScenario) {
+  const comparableSamples = scenarioSamplesToComparable(scenario);
+  const scenarioPoints = comparableSamplesToScenePoints(comparableSamples);
+  localPoints = scenarioPoints;
+  displayPoints = scenarioPoints;
+  displayEpochs = comparableSamples.map((sample) => sample.epoch);
+  centerDisplayOnAscendingNode(comparableSamples);
+  orbitScene.setTracePoints("satellite-js", scenarioPoints);
+
+  if (displayPoints[0]) {
+    orbitScene.setSatellitePosition(displayPoints[0]);
+  }
+}
+
+function scenarioSamplesToComparable(
+  scenario: NormalizedScenario,
+): ComparableOrbitSample[] {
+  const samples =
+    scenario.samples.length > 0
+      ? scenario.samples
+      : scenario.initialState
+        ? [scenario.initialState]
+        : [];
+
+  return samples.map((sample) => scenarioSampleToComparable(sample, scenario));
+}
+
+function scenarioSampleToComparable(
+  sample: ScenarioStateSample,
+  scenario: NormalizedScenario,
+): ComparableOrbitSample {
+  return {
+    epoch: sample.epoch,
+    epochIso: normalizeEpochIso(sample.epoch),
+    source: "scenario",
+    frame: scenario.frame.name,
+    positionUnit: scenario.units.position,
+    velocityUnit: scenario.units.velocity,
+    positionKm: sample.positionKm,
+    velocityKmPerSecond: sample.velocityKmPerSecond,
+  };
+}
+
+function orekitRefreshMessage() {
+  if (!activeTle) {
+    return "No TLE propagation input";
+  }
+
+  return `Refresh ${labelForPropagationFrame(currentFrame)}`;
 }
 
 function resize() {
@@ -382,6 +540,7 @@ window.addEventListener("beforeunload", () => {
   localUncertaintyScene.dispose();
 });
 resize();
+void loadScenarioExamples();
 animate();
 
 function covarianceSampleAtOffset(offsetHours: number): {
