@@ -425,26 +425,120 @@ concise quantitative readouts.
 
 ## Increment 7: Higher-Fidelity Ephemeris Product Investigation
 
+Status: Proposed for approval.
+
 ### Objective
 
 Investigate OEM, CPF, and related POD products as paths around TLE limitations.
 
+This increment should answer which external ephemeris path Orb Lab should make
+production-quality first. It should stay small enough to produce a documented
+decision and, if practical, a thin parser feasibility spike without committing
+the whole Goal 05 data-loader workflow.
+
 ### Scope
 
-- Test Orekit OEM parsing in the current Python service context.
-- Identify at least one realistic public OEM-like fixture or create a clearly
-  hand-authored minimal fixture if licensing blocks reuse.
-- Investigate CPF format fit for SLR prediction workflows.
-- Document whether covariance is available directly, adjacent in another
-  product, or must be estimated.
-- Compare product roles against TLE/GP data and Goal 05 loader assumptions.
+- Treat CCSDS OEM as the primary candidate for externally supplied ephemeris
+  samples.
+- Test whether Orekit OEM parsing is reachable from the current Python
+  `orekit-jpype` runtime and local Orekit data setup.
+- Identify a small OEM fixture strategy. Prefer a public fixture with clear
+  reuse terms; otherwise create a hand-authored minimal OEM fixture explicitly
+  labeled as format/loader test data, not a physical truth product.
+- Prototype only enough OEM parsing to answer feasibility: file/text content,
+  object/source metadata, segment frame, time system, sample epochs, positions,
+  velocities, and unit normalization to the existing `km` and `km/s` API
+  conventions if Orekit returns SI units.
+- Investigate CPF as a satellite laser ranging prediction product and decide
+  whether it belongs in the same scenario loader path, an adapter-only path, or
+  a deferred specialist workflow.
+- Investigate CDM/POD-adjacent covariance availability at the product level.
+  Record whether covariance is carried in the product, adjacent in another
+  product, estimated from residuals, or absent.
+- Compare TLE/GP, OEM, CPF, and CDM/POD-adjacent products using the same
+  evaluation dimensions: source semantics, intended use, time system, epoch
+  handling, frame naming, transform requirements, interpolation expectations,
+  covariance availability, Goal 05 scenario-loader fit, and Goal 06
+  uncertainty/intersection fit.
+- Keep authoritative parsing and frame/time handling on the Python/Orekit side.
+- Keep browser changes out of this increment unless a tiny TypeScript type note
+  is needed for planning.
+
+### Recommended Direction
+
+Prefer OEM as the first production-quality external ephemeris path if the
+Orekit parser is reachable and a minimal fixture can be parsed repeatably.
+
+Use CPF as a documented product-category investigation first. CPF may become
+useful for SLR prediction workflows, but it should not displace OEM unless the
+investigation finds a stronger fit for Orb Lab's near-term visualization and
+intersection work.
+
+Treat covariance-bearing products, especially CDM-like conjunction products, as
+inputs to later intersection probability increments rather than as the first
+ephemeris loader.
+
+### Feasibility Spike
+
+If the local Orekit runtime allows it, add a small Python spike behind tests or
+a narrowly scoped helper. The spike should not create a public API endpoint yet.
+
+The spike should attempt to answer:
+
+- Which Orekit parser classes are importable through `orekit-jpype`?
+- What setup is required for time scales and data providers?
+- What frame labels are surfaced by a parsed OEM segment?
+- Are samples returned as position-only or position-velocity states?
+- What units must be converted before data can reuse existing response models?
+- What failure modes should the eventual loader expose?
+
+If Orekit OEM parsing is blocked, document the exact blocker and do not
+work around it with an ad hoc parser beyond fixture inspection.
+
+### Data Product Comparison Matrix
+
+Create a comparison table in the investigation document with rows for:
+
+- CelesTrak GP/TLE.
+- CCSDS OEM.
+- CPF.
+- CDM or CDM-like covariance/conjunction products.
+- Optional POD products discovered during research, only if they materially
+  change the recommendation.
+
+Columns should include:
+
+- Primary purpose.
+- Typical producer/consumer.
+- State representation.
+- Frame/time-scale handling.
+- Interpolation expectation.
+- Covariance availability.
+- Licensing/fixture practicality.
+- Orekit support path.
+- Recommended Orb Lab role.
+
+### Decision Outputs
+
+End the increment with a clear recommendation:
+
+- first production-quality ephemeris loader path;
+- fixture strategy for that path;
+- whether parser code should live in Goal 05 loader work or a Goal 06-specific
+  prototype module first;
+- whether covariance should be imported with the ephemeris path or handled as a
+  separate later product;
+- remaining blockers before implementation.
 
 ### Expected Files
 
 - `docs/goals/06-uncertainty-and-intersections/EPHEMERIS_PRODUCTS.md`
-- Possible parser prototype under `src/orb_lab/`
+- Possible parser spike: `src/orb_lab/ephemeris_products.py` or
+  `src/orb_lab/ccsds.py`
+- Possible tests: `tests/test_ephemeris_products.py` or
+  `tests/test_ccsds_oem.py`
 - Possible fixture under `tests/fixtures/` or `examples/scenarios/`
-- Tests if parser behavior is added.
+- Goal docs and record updates.
 
 ### Acceptance Criteria
 
@@ -454,16 +548,25 @@ Investigate OEM, CPF, and related POD products as paths around TLE limitations.
   and covariance or uncertainty.
 - TLE limitations are described in terms of data product semantics, not just
   visual divergence.
+- A recommendation names the first production-quality ephemeris product path.
+- Fixture licensing or hand-authored fixture provenance is explicit.
+- Any parser spike is covered by focused tests or explicitly recorded as blocked
+  before code is added.
+- The plan preserves the Goal 05 boundary: normalized scenario loading remains a
+  later implementation increment unless explicitly approved.
 
 ### Validation
 
 - `uv run pytest` if parser code or fixtures are added.
 - `uv run ruff check .` if Python code is added.
 - Documentation review.
+- JSON/XML/text fixture syntax checks if fixtures are added.
 
 ### Approval Question
 
-Approve which ephemeris product path should become production-quality first.
+Approve this investigation plan, with CCSDS OEM as the primary feasibility path,
+CPF as a product-fit investigation, and CDM/POD covariance products as
+supporting research for later intersection increments.
 
 ## Increment 8: Orbit-to-Orbit Intersection Probability Prototype
 
