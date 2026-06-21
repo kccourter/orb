@@ -68,10 +68,27 @@ const LOCAL_UNCERTAINTY_VISUAL_GAIN = 0.08;
 const LOCAL_PLAYBACK_HOURS_PER_SECOND = 0.05;
 const orbitCanvas = canvas;
 
+const appShell = document.createElement("main");
+appShell.className = "app-shell";
+
+const controlPane = document.createElement("section");
+controlPane.className = "control-pane";
+controlPane.dataset.testid = "control-pane";
+controlPane.setAttribute("aria-label", "Orb Lab controls");
+
+const renderPane = document.createElement("section");
+renderPane.className = "render-pane";
+renderPane.dataset.testid = "render-pane";
+renderPane.setAttribute("aria-label", "Orb Lab visualization");
+
+document.body.append(appShell);
+appShell.append(controlPane, renderPane);
+renderPane.append(orbitCanvas);
+
 const localCanvas = document.createElement("canvas");
 localCanvas.id = "local-uncertainty-scene";
 localCanvas.dataset.testid = "local-uncertainty-scene";
-document.body.append(localCanvas);
+renderPane.append(localCanvas);
 
 const orbitScene = createOrbitScene(orbitCanvas);
 const localUncertaintyScene = createLocalUncertaintyExplorerScene(localCanvas);
@@ -93,7 +110,7 @@ controlStack.append(
   frameControls.element,
   orekitControls.element,
 );
-document.body.append(
+controlPane.append(
   viewSwitch.element,
   controlStack,
   localUncertaintyControls.element,
@@ -314,8 +331,9 @@ function centerDisplayOnAscendingNode(samples: readonly NodeSearchSample[]) {
 }
 
 function resize() {
-  const width = window.innerWidth;
-  const height = window.innerHeight;
+  const bounds = renderPane.getBoundingClientRect();
+  const width = Math.max(Math.floor(bounds.width), 1);
+  const height = Math.max(Math.floor(bounds.height), 1);
   orbitScene.resize(width, height);
   localUncertaintyScene.resize(width, height);
 }

@@ -182,16 +182,22 @@ function createTrace(color: number): OrbitTrace {
 
 function createEarthReferenceLines(): THREE.Group {
   const group = new THREE.Group();
-  const material = new THREE.LineBasicMaterial({
+  const equatorMaterial = new THREE.LineBasicMaterial({
     color: SCENE_CONSTANTS.earthReferenceLineColor,
     transparent: true,
-    opacity: 0.48,
+    opacity: 0.42,
   });
+  const minorMeridianMaterial = equatorMaterial.clone();
+  minorMeridianMaterial.opacity = 0.28;
+  const majorMeridianMaterial = equatorMaterial.clone();
+  majorMeridianMaterial.opacity = 0.52;
 
-  group.add(createCircleLine("equator", material));
-  for (const rotation of [0, Math.PI / 2]) {
+  group.add(createCircleLine("equator", equatorMaterial));
+  for (let index = 0; index < 12; index += 1) {
+    const material =
+      index % 3 === 0 ? majorMeridianMaterial : minorMeridianMaterial;
     const meridian = createCircleLine("meridian", material.clone());
-    meridian.rotation.y = rotation;
+    meridian.rotation.z = (index / 12) * Math.PI;
     group.add(meridian);
   }
 
@@ -269,8 +275,9 @@ function createCircleLine(
 
   for (let index = 0; index <= segments; index += 1) {
     const angle = (index / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * SCENE_CONSTANTS.earthRadiusUnits * 1.002;
-    const y = Math.sin(angle) * SCENE_CONSTANTS.earthRadiusUnits * 1.002;
+    const referenceRadius = SCENE_CONSTANTS.earthRadiusUnits * 1.006;
+    const x = Math.cos(angle) * referenceRadius;
+    const y = Math.sin(angle) * referenceRadius;
     points.push(
       kind === "equator"
         ? new THREE.Vector3(x, y, 0)

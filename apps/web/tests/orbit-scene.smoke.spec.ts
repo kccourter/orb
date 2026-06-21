@@ -9,6 +9,65 @@ test("renders the orbit scene to a nonblank canvas", async ({ page }) => {
   expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
 });
 
+test("keeps orbital controls outside the render pane", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+
+  const controlPane = page.getByTestId("control-pane");
+  const renderPane = page.getByTestId("render-pane");
+  const canvas = page.locator("#scene");
+
+  await expect(controlPane).toBeVisible();
+  await expect(renderPane).toBeVisible();
+  await expect(canvas).toBeVisible();
+
+  await expect(canvas).toBeInViewport();
+  await expect(page.getByLabel("Orbit preview controls")).toBeVisible();
+  await expect(page.getByLabel("Propagation frame controls")).toBeVisible();
+  await expect(page.getByLabel("Orekit overlay controls")).toBeVisible();
+
+  const boxes = await page.evaluate(() => {
+    const controlBounds = document
+      .querySelector<HTMLElement>('[data-testid="control-pane"]')
+      ?.getBoundingClientRect();
+    const renderBounds = document
+      .querySelector<HTMLElement>('[data-testid="render-pane"]')
+      ?.getBoundingClientRect();
+    const canvasBounds = document
+      .querySelector<HTMLCanvasElement>("#scene")
+      ?.getBoundingClientRect();
+
+    if (!controlBounds || !renderBounds || !canvasBounds) {
+      return null;
+    }
+
+    return {
+      control: rectToObject(controlBounds),
+      render: rectToObject(renderBounds),
+      canvas: rectToObject(canvasBounds),
+    };
+
+    function rectToObject(rect: DOMRect) {
+      return {
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+      };
+    }
+  });
+
+  expect(boxes).not.toBeNull();
+  expect(boxes?.control.right).toBeLessThanOrEqual(boxes?.render.left ?? 0);
+  expect(boxes?.canvas.left).toBeGreaterThanOrEqual(boxes?.render.left ?? 0);
+  expect(boxes?.canvas.right).toBeLessThanOrEqual(boxes?.render.right ?? 0);
+  expect(boxes?.canvas.top).toBeGreaterThanOrEqual(boxes?.render.top ?? 0);
+  expect(boxes?.canvas.bottom).toBeLessThanOrEqual(boxes?.render.bottom ?? 0);
+  expect(await countNonBlankCanvasPixels(page)).toBeGreaterThan(0);
+});
+
 test("recomputes the orbit from sampling controls", async ({ page }) => {
   await page.goto("/");
 

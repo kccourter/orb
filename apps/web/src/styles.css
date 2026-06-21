@@ -12,11 +12,40 @@ body {
   overflow: hidden;
 }
 
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  width: 100vw;
+  height: 100vh;
+  background: #071014;
+}
+
+.control-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background: #09161b;
+  border-right: 1px solid rgb(255 255 255 / 14%);
+}
+
+.render-pane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #071014;
+}
+
 #scene,
 #local-uncertainty-scene {
   display: block;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
 }
 
 #scene[hidden],
@@ -27,17 +56,15 @@ body {
 }
 
 .control-stack {
-  position: fixed;
-  inset: 16px auto auto 16px;
-  z-index: 10;
   display: grid;
   gap: 8px;
-  width: min(calc(100vw - 32px), 720px);
+  align-content: start;
+  min-width: 0;
 }
 
 .orbit-controls {
   display: grid;
-  grid-template-columns: minmax(220px, 1.4fr) repeat(2, minmax(92px, 0.5fr)) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(82px, 0.42fr);
   gap: 8px;
   align-items: end;
   width: 100%;
@@ -47,6 +74,10 @@ body {
   border: 1px solid rgb(255 255 255 / 18%);
   border-radius: 8px;
   backdrop-filter: blur(10px);
+}
+
+.orbit-controls__field--epoch {
+  grid-column: 1 / -1;
 }
 
 .orbit-controls__field {
@@ -93,6 +124,7 @@ body {
 }
 
 .orbit-controls__button {
+  grid-column: 1 / -1;
   padding: 0 12px;
   cursor: pointer;
 }
@@ -109,10 +141,10 @@ body {
 
 .frame-controls {
   display: grid;
-  grid-template-columns: auto minmax(150px, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 8px;
   align-items: center;
-  width: min(100%, 360px);
+  width: 100%;
   min-height: 40px;
   padding: 8px 10px;
   box-sizing: border-box;
@@ -120,6 +152,10 @@ body {
   border: 1px solid rgb(255 255 255 / 18%);
   border-radius: 8px;
   backdrop-filter: blur(10px);
+}
+
+.frame-controls__value {
+  grid-column: 2;
 }
 
 .frame-controls__label,
@@ -149,10 +185,10 @@ body {
 
 .orekit-overlay {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: 1fr;
   gap: 10px;
-  align-items: center;
-  width: min(100%, 640px);
+  align-items: stretch;
+  width: 100%;
   min-height: 40px;
   padding: 8px 10px;
   box-sizing: border-box;
@@ -237,7 +273,7 @@ body {
 .orekit-overlay__metrics {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, auto));
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 4px 10px;
   align-items: baseline;
   margin: 0;
@@ -269,9 +305,6 @@ body {
 }
 
 .view-switch {
-  position: fixed;
-  inset: 16px 16px auto auto;
-  z-index: 11;
   display: inline-grid;
   grid-template-columns: repeat(2, minmax(58px, auto));
   gap: 4px;
@@ -314,14 +347,10 @@ body {
 }
 
 .local-uncertainty-controls {
-  position: fixed;
-  inset: 16px auto auto 16px;
-  z-index: 10;
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto minmax(90px, auto) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(76px, auto);
   gap: 8px;
   align-items: end;
-  width: min(calc(100vw - 160px), 960px);
   padding: 10px;
   box-sizing: border-box;
   background: rgb(7 16 20 / 82%);
@@ -337,6 +366,7 @@ body {
 }
 
 .local-uncertainty-controls__playback {
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(64px, auto) minmax(76px, auto);
   gap: 4px;
@@ -371,6 +401,7 @@ body {
 }
 
 .local-uncertainty-controls__views {
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(4, minmax(42px, auto));
   gap: 4px;
@@ -383,7 +414,7 @@ body {
 .local-uncertainty-controls__readout {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(4, auto minmax(0, 1fr));
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 4px 8px;
   align-items: baseline;
   margin: 0;
@@ -408,21 +439,21 @@ body {
   text-overflow: ellipsis;
 }
 
-@media (width <= 720px) {
-  .control-stack {
-    width: min(calc(100vw - 32px), 390px);
+@media (width <= 860px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .control-pane {
+    grid-template-rows: auto auto;
+    max-height: 44vh;
+    border-right: 0;
+    border-bottom: 1px solid rgb(255 255 255 / 14%);
   }
 
   .orbit-controls {
     grid-template-columns: minmax(0, 1fr) minmax(74px, 0.5fr) minmax(74px, 0.5fr);
-  }
-
-  .orbit-controls__button {
-    grid-column: 1 / -1;
-  }
-
-  .orekit-overlay {
-    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .orekit-overlay__legend {
@@ -431,24 +462,6 @@ body {
 
   .orekit-overlay__metrics {
     grid-template-columns: repeat(3, minmax(0, auto));
-  }
-
-  .view-switch {
-    inset: auto 16px 16px auto;
-  }
-
-  .local-uncertainty-controls {
-    width: min(calc(100vw - 32px), 390px);
-    grid-template-columns: minmax(0, 1fr) minmax(76px, auto);
-  }
-
-  .local-uncertainty-controls__playback {
-    grid-column: 1 / -1;
-    grid-template-columns: minmax(0, 1fr) minmax(76px, auto);
-  }
-
-  .local-uncertainty-controls__views {
-    grid-column: 1 / -1;
   }
 
   .local-uncertainty-controls__readout {
@@ -465,15 +478,8 @@ body {
     grid-column: 1 / -1;
   }
 
-}
-
-@media (max-width: 420px) {
   .frame-controls {
     grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .frame-controls__value {
-    display: none;
   }
 
   .orekit-overlay {
@@ -492,7 +498,9 @@ body {
   .orekit-overlay__metrics {
     grid-template-columns: repeat(2, minmax(0, auto));
   }
+}
 
+@media (max-width: 420px) {
   .local-uncertainty-controls {
     grid-template-columns: 1fr;
   }

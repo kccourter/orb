@@ -571,7 +571,7 @@ and reserve CDM/POD covariance products for later intersection increments.
 
 ## Increment 8: Distinct Control and Render Panes
 
-Status: Proposed for approval.
+Status: implemented. See [RECORD.md](RECORD.md).
 
 ### Objective
 
@@ -642,8 +642,8 @@ over mission geometry.
 
 ### Approval Question
 
-Approve this UI cleanup increment to split controls from orbital rendering and
-add denser Earth meridian cues before continuing with intersection prototypes.
+Completed decision: split controls from orbital rendering and add denser Earth
+meridian cues before continuing with intersection prototypes.
 
 ## Increment 9: Orbit-to-Orbit Intersection Probability Prototype
 

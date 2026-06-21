@@ -49,6 +49,7 @@ outside its intended freshness window.
 7. Investigate and prototype higher-fidelity ephemeris products. Completed:
    see [EPHEMERIS_PRODUCTS.md](EPHEMERIS_PRODUCTS.md).
 8. Split controls from orbital rendering and add denser Earth meridian cues.
+   Completed: see [RECORD.md](RECORD.md).
 9. Prototype orbit-to-orbit intersection probability.
 10. Prototype orbit-to-WEZ ellipsoid intersection probability.
 11. Record validation, assumptions, and remaining risks.

@@ -493,3 +493,75 @@ Results:
 - Focused tests with local Orekit data: 2 passed.
 - Full pytest suite: 41 passed, 6 skipped.
 - Ruff: all checks passed.
+
+## Increment 8: Distinct Control and Render Panes
+
+Status: implemented.
+
+### Outcome
+
+The orbital view now separates controls from rendering instead of drawing
+control panels over Earth and orbit imagery.
+
+- Added a two-pane app shell with a dedicated control pane and render pane.
+- Moved the `Orbit` / `QSW` switch, orbit sampling controls, frame controls,
+  and Orekit comparison status into the control pane.
+- Kept the Three.js canvases inside the render pane and resized scenes from the
+  render pane bounds instead of the full browser viewport.
+- Preserved the existing `Orbit` / `QSW` mode behavior and local QSW explorer.
+- Added denser Earth meridian reference cues, with major and minor lines drawn
+  subtly above the globe so slow rotation/precession is easier to see.
+- Added smoke coverage for control/render pane separation.
+
+### Artifacts
+
+- `apps/web/src/main.ts`
+- `apps/web/src/scene/createScene.ts`
+- `apps/web/src/styles.css`
+- `apps/web/tests/orbit-scene.smoke.spec.ts`
+- [PLAN.md](PLAN.md)
+- [README.md](README.md)
+
+### Implementation Notes
+
+- The render pane owns canvas sizing; the global and local scenes both resize
+  to the render pane's bounding box.
+- On desktop, controls occupy a left pane and rendering occupies the remaining
+  viewport.
+- On narrow screens, controls stack above the render pane with scrolling in the
+  control pane so form controls do not overlap visualization content.
+- Earth reference lines remain visual cues only. They are not an authoritative
+  Earth-fixed grid.
+- Follow-up visual review found the first meridian pass too overlay-like. The
+  final version keeps the pane layout, but treats meridians as static,
+  depth-tested Earth-child geometry that rotates with the sphere.
+
+### Validation
+
+Commands run:
+
+```sh
+pnpm --dir apps/web check
+pnpm --dir apps/web build
+pnpm --dir apps/web smoke
+```
+
+Results:
+
+- TypeScript check: passed.
+- Vite build: passed, with the existing satellite.js browser-externalization
+  and chunk-size warnings.
+- Playwright smoke: 7 passed.
+
+Browser checks:
+
+- Desktop viewport `1280x800`: controls are confined to the left pane, render
+  pane is nonblank, Earth/orbit imagery is unobscured by UI panels, and meridian
+  cues are visible.
+- Narrow viewport `390x844`: controls stack above the render pane, the control
+  pane scrolls, the render pane remains nonblank, and controls do not overlap
+  rendered Earth/orbit imagery.
+- Captures saved under `artifacts/goal06-ui-cleanup/`.
+- Follow-up captures after meridian simplification:
+  `orbit-desktop-static-meridians.png` and
+  `orbit-narrow-static-meridians.png`.
