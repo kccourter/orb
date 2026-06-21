@@ -425,7 +425,8 @@ concise quantitative readouts.
 
 ## Increment 7: Higher-Fidelity Ephemeris Product Investigation
 
-Status: Proposed for approval.
+Status: implemented. See [EPHEMERIS_PRODUCTS.md](EPHEMERIS_PRODUCTS.md) and
+[RECORD.md](RECORD.md).
 
 ### Objective
 
@@ -564,9 +565,9 @@ End the increment with a clear recommendation:
 
 ### Approval Question
 
-Approve this investigation plan, with CCSDS OEM as the primary feasibility path,
-CPF as a product-fit investigation, and CDM/POD covariance products as
-supporting research for later intersection increments.
+Completed decision: make CCSDS OEM the first production-quality external
+ephemeris loader path, keep CPF as an adapter-only/deferred product category,
+and reserve CDM/POD covariance products for later intersection increments.
 
 ## Increment 8: Orbit-to-Orbit Intersection Probability Prototype
 

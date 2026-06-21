@@ -431,3 +431,65 @@ Results:
 - Vite build: passed, with the existing satellite.js browser-externalization and
   chunk-size warnings.
 - Playwright smoke: 6 passed.
+
+## Increment 7: Higher-Fidelity Ephemeris Product Investigation
+
+Status: implemented.
+
+### Outcome
+
+CCSDS OEM is the recommended first production-quality external ephemeris loader
+path for Orb Lab.
+
+- OEM matches Orb Lab's sampled Cartesian trace workflow and carries explicit
+  frame, time system, start/stop, and interpolation metadata.
+- Orekit's CCSDS OEM parser is reachable from the current `orekit-jpype`
+  runtime.
+- A minimal hand-authored OEM fixture parses through Orekit and normalizes
+  positions and velocities from Orekit SI units into the project's `km` and
+  `km/s` conventions.
+- CPF is documented as an adapter-only/deferred product category for SLR
+  prediction workflows.
+- CDM and POD-adjacent covariance products are documented as later inputs for
+  intersection probability and covariance semantics, not as the first nominal
+  ephemeris loader.
+
+### Artifacts
+
+- [EPHEMERIS_PRODUCTS.md](EPHEMERIS_PRODUCTS.md)
+- `src/orb_lab/ephemeris_products.py`
+- `tests/fixtures/orb-sat-1-minimal.oem`
+- `tests/test_ephemeris_products.py`
+- [PLAN.md](PLAN.md)
+- [README.md](README.md)
+
+### Implementation Notes
+
+- The parser spike deliberately inspects only the first OEM segment and does
+  not expose a public API route.
+- The OEM fixture is hand-authored format/loader test data, not a physical
+  truth trajectory for ORB-SAT-1.
+- The helper uses existing Orekit data initialization and returns timezone-aware
+  UTC `datetime` values.
+- Production scenario loading remains a Goal 05 boundary. This increment
+  supplies the feasibility proof and recommended shape for that loader.
+- OEM covariance blocks are important but intentionally deferred until nominal
+  OEM trace ingestion is stable.
+
+### Validation
+
+Commands run:
+
+```sh
+uv run pytest tests/test_ephemeris_products.py
+UV_CACHE_DIR=/Users/kcourter/dev/orb/.uv-cache OREKIT_DATA_PATH=/Users/kcourter/dev/orb/orekit-data.zip uv run pytest tests/test_ephemeris_products.py
+uv run pytest
+uv run ruff check .
+```
+
+Results:
+
+- Focused tests without `OREKIT_DATA_PATH`: 1 passed, 1 skipped.
+- Focused tests with local Orekit data: 2 passed.
+- Full pytest suite: 41 passed, 6 skipped.
+- Ruff: all checks passed.

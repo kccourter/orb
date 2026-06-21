@@ -46,7 +46,8 @@ outside its intended freshness window.
    see [FIXED_OBSERVER_ORBIT_VIEW.md](FIXED_OBSERVER_ORBIT_VIEW.md).
 6. Create a local QSW uncertainty explorer display. Completed: see
    [LOCAL_QSW_UNCERTAINTY_EXPLORER.md](LOCAL_QSW_UNCERTAINTY_EXPLORER.md).
-7. Investigate and prototype higher-fidelity ephemeris products.
+7. Investigate and prototype higher-fidelity ephemeris products. Completed:
+   see [EPHEMERIS_PRODUCTS.md](EPHEMERIS_PRODUCTS.md).
 8. Prototype orbit-to-orbit intersection probability.
 9. Prototype orbit-to-WEZ ellipsoid intersection probability.
 10. Record validation, assumptions, and remaining risks.
