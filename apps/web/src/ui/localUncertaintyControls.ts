@@ -2,9 +2,11 @@ import type { CovarianceSample, CovarianceSeries } from "../uncertainty/types";
 import type { LocalUncertaintyView } from "../scene/localUncertaintyExplorer";
 
 export type LocalUncertaintySettings = {
-  sampleIndex: number;
+  offsetHours: number;
   sigma: 1 | 2 | 3;
   view: LocalUncertaintyView;
+  playing: boolean;
+  playbackSpeed: 1 | 5 | 10 | 15 | 30 | 60;
 };
 
 export type LocalUncertaintyReadout = {
@@ -14,11 +16,13 @@ export type LocalUncertaintyReadout = {
   frame: string;
   provenance: string;
   units: string;
+  sampleStatus: "exact" | "interpolated";
 };
 
 export type LocalUncertaintyControls = {
   element: HTMLElement;
   settings: LocalUncertaintySettings;
+  setSettings: (settings: LocalUncertaintySettings) => void;
   setReadout: (readout: LocalUncertaintyReadout) => void;
 };
 
@@ -26,10 +30,16 @@ export function createLocalUncertaintyControls(
   series: CovarianceSeries,
   onChange: (settings: LocalUncertaintySettings) => void,
 ): LocalUncertaintyControls {
+  const maxOffsetHours = covarianceOffsetHours(
+    series.samples.at(-1)?.epoch,
+    series,
+  );
   let currentSettings: LocalUncertaintySettings = {
-    sampleIndex: 0,
+    offsetHours: 0,
     sigma: 2,
     view: "iso",
+    playing: false,
+    playbackSpeed: 1,
   };
 
   const form = document.createElement("form");
@@ -45,11 +55,33 @@ export function createLocalUncertaintyControls(
   timeInput.className = "local-uncertainty-controls__range";
   timeInput.type = "range";
   timeInput.min = "0";
-  timeInput.max = String(Math.max(series.samples.length - 1, 0));
-  timeInput.step = "1";
+  timeInput.max = String(maxOffsetHours);
+  timeInput.step = "0.01";
   timeInput.value = "0";
   timeInput.dataset.testid = "local-uncertainty-time";
   timeField.append(timeLabel, timeInput);
+
+  const playbackGroup = document.createElement("div");
+  playbackGroup.className = "local-uncertainty-controls__playback";
+
+  const playButton = document.createElement("button");
+  playButton.type = "button";
+  playButton.className = "local-uncertainty-controls__button";
+  playButton.textContent = "Play";
+  playButton.dataset.testid = "local-uncertainty-play";
+
+  const speedSelect = document.createElement("select");
+  speedSelect.className = "local-uncertainty-controls__select";
+  speedSelect.setAttribute("aria-label", "Playback speed");
+  speedSelect.dataset.testid = "local-uncertainty-speed";
+  for (const speed of [1, 5, 10, 15, 30, 60] as const) {
+    const option = document.createElement("option");
+    option.value = String(speed);
+    option.textContent = `${speed}x`;
+    speedSelect.append(option);
+  }
+  speedSelect.value = String(currentSettings.playbackSpeed);
+  playbackGroup.append(playButton, speedSelect);
 
   const sigmaField = document.createElement("label");
   sigmaField.className = "local-uncertainty-controls__field";
@@ -107,12 +139,31 @@ export function createLocalUncertaintyControls(
     readout.append(term, value);
   }
 
-  form.append(timeField, sigmaField, viewGroup, readout);
+  form.append(timeField, playbackGroup, sigmaField, viewGroup, readout);
 
   timeInput.addEventListener("input", () => {
     commit({
       ...currentSettings,
-      sampleIndex: Number(timeInput.value),
+      offsetHours: Number(timeInput.value),
+      playing: false,
+    });
+  });
+
+  playButton.addEventListener("click", () => {
+    commit({
+      ...currentSettings,
+      playing: !currentSettings.playing,
+      offsetHours:
+        currentSettings.playing || currentSettings.offsetHours < maxOffsetHours
+          ? currentSettings.offsetHours
+          : 0,
+    });
+  });
+
+  speedSelect.addEventListener("change", () => {
+    commit({
+      ...currentSettings,
+      playbackSpeed: Number(speedSelect.value) as 1 | 5 | 10 | 15 | 30 | 60,
     });
   });
 
@@ -125,8 +176,14 @@ export function createLocalUncertaintyControls(
 
   function commit(settings: LocalUncertaintySettings) {
     currentSettings = normalizeSettings(settings, series);
-    timeInput.value = String(currentSettings.sampleIndex);
+    timeInput.value = String(currentSettings.offsetHours);
     sigmaSelect.value = String(currentSettings.sigma);
+    speedSelect.value = String(currentSettings.playbackSpeed);
+    playButton.textContent = currentSettings.playing ? "Pause" : "Play";
+    playButton.setAttribute(
+      "aria-pressed",
+      currentSettings.playing ? "true" : "false",
+    );
     for (const [view, button] of viewButtons) {
       button.setAttribute(
         "aria-pressed",
@@ -141,12 +198,17 @@ export function createLocalUncertaintyControls(
     get settings() {
       return currentSettings;
     },
+    setSettings(settings) {
+      commit(settings);
+    },
     setReadout(nextReadout) {
       readoutEntries
         .get("Time")
         ?.replaceChildren(
           document.createTextNode(
-            `+${formatNumber(nextReadout.offsetHours)}h ${nextReadout.sample.epoch}`,
+            `+${formatNumber(nextReadout.offsetHours)}h ${formatEpoch(
+              nextReadout.sample.epoch,
+            )}`,
           ),
         );
       readoutEntries
@@ -165,7 +227,11 @@ export function createLocalUncertaintyControls(
         );
       readoutEntries
         .get("Source")
-        ?.replaceChildren(document.createTextNode(nextReadout.provenance));
+        ?.replaceChildren(
+          document.createTextNode(
+            `${nextReadout.provenance} ${nextReadout.sampleStatus}`,
+          ),
+        );
     },
   };
 }
@@ -174,17 +240,38 @@ function normalizeSettings(
   settings: LocalUncertaintySettings,
   series: CovarianceSeries,
 ): LocalUncertaintySettings {
-  const sampleIndex = Math.min(
-    Math.max(Math.round(settings.sampleIndex), 0),
-    Math.max(series.samples.length - 1, 0),
+  const offsetHours = Math.min(
+    Math.max(settings.offsetHours, 0),
+    covarianceOffsetHours(series.samples.at(-1)?.epoch, series),
   );
   const sigma = [1, 2, 3].includes(settings.sigma) ? settings.sigma : 2;
+  const playbackSpeed = [1, 5, 10, 15, 30, 60].includes(
+    settings.playbackSpeed,
+  )
+    ? settings.playbackSpeed
+    : 1;
 
   return {
-    sampleIndex,
+    offsetHours,
     sigma,
     view: settings.view,
+    playing: settings.playing,
+    playbackSpeed,
   };
+}
+
+function covarianceOffsetHours(
+  epochIso: string | undefined,
+  series: CovarianceSeries,
+): number {
+  const startTime = Date.parse(series.samples[0]?.epoch ?? "");
+  const epochTime = Date.parse(epochIso ?? "");
+
+  if (!Number.isFinite(startTime) || !Number.isFinite(epochTime)) {
+    return 0;
+  }
+
+  return (epochTime - startTime) / (60 * 60 * 1000);
 }
 
 function formatLength(kilometers: number): string {
@@ -203,4 +290,13 @@ function formatNumber(value: number): string {
     return value.toFixed(1);
   }
   return value.toFixed(2);
+}
+
+function formatEpoch(epochIso: string): string {
+  const date = new Date(epochIso);
+  if (Number.isNaN(date.getTime())) {
+    return epochIso;
+  }
+
+  return `${date.toISOString().slice(0, 16).replace("T", " ")}Z`;
 }

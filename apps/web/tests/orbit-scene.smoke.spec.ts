@@ -64,7 +64,26 @@ test("opens the local QSW uncertainty explorer", async ({ page }) => {
     await countNonBlankCanvasPixels(page, "#local-uncertainty-scene"),
   ).toBeGreaterThan(0);
 
-  await page.getByTestId("local-uncertainty-time").fill("5");
+  await page.getByTestId("local-uncertainty-time").fill("0.5");
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "+0.50h",
+  );
+  await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
+    "interpolated",
+  );
+
+  await page.getByTestId("local-uncertainty-speed").selectOption("60");
+  await page.getByTestId("local-uncertainty-play").click();
+  await expect(page.getByTestId("local-uncertainty-play")).toHaveText("Pause");
+  await page.waitForTimeout(300);
+  const animatedOffset = Number(
+    await page.getByTestId("local-uncertainty-time").inputValue(),
+  );
+  expect(animatedOffset).toBeGreaterThan(0.5);
+  await page.getByTestId("local-uncertainty-play").click();
+  await expect(page.getByTestId("local-uncertainty-play")).toHaveText("Play");
+
+  await page.getByTestId("local-uncertainty-time").fill("72");
   await expect(page.getByTestId("local-uncertainty-readout")).toContainText(
     "+72.0h",
   );

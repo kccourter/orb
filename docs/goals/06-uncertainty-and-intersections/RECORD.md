@@ -402,3 +402,32 @@ Browser checks:
   readable, and mode switch remains reachable.
 - Global orbit view remains nonblank after returning from QSW mode and still has
   no uncertainty controls or ellipsoid overlay.
+
+### Follow-Up: Smooth Scrubber And Playback
+
+After visual review, the QSW offset scrubber was refined from exact sample
+stepping to fine-grained continuous offsets.
+
+- Added linear interpolation between neighboring covariance fixture samples.
+- Labeled interpolated readouts as `synthetic interpolated` and exact fixture
+  points as `synthetic exact`.
+- Added play/pause controls with `1x`, `5x`, `10x`, `15x`, `30x`, and `60x`
+  speed options.
+- Advanced playback from animation-frame deltas for smooth visual changes.
+- Shortened timestamp formatting in the readout so desktop and narrow layouts
+  remain readable.
+
+Validation after the follow-up:
+
+```sh
+pnpm --dir apps/web check
+pnpm --dir apps/web build
+pnpm --dir apps/web smoke
+```
+
+Results:
+
+- TypeScript check: passed.
+- Vite build: passed, with the existing satellite.js browser-externalization and
+  chunk-size warnings.
+- Playwright smoke: 6 passed.

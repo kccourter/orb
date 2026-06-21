@@ -21,8 +21,11 @@ The implementation adds a separate in-app `QSW` mode beside the existing
 - the selected covariance ellipsoid is rendered from the ORB-SAT-1 synthetic
   QSW fixture;
 - `1σ`, `2σ`, and `3σ` selections update the ellipsoid and numeric readouts;
-- the offset scrubber steps through the exact fixture samples from epoch through
-  `+72h`;
+- the offset scrubber supports fine-grained movement from epoch through `+72h`;
+- covariance is linearly interpolated between neighboring fixture samples for
+  smooth inspection and labeled as interpolated in the readout;
+- playback animates the offset with `1x`, `5x`, `10x`, `15x`, `30x`, and `60x`
+  speed options;
 - view buttons provide `Iso`, `+Q`, `+S`, and `+W` camera presets.
 
 ## Frame And Data Semantics
@@ -51,6 +54,7 @@ The app has a fixed mode switch:
 The local controls include:
 
 - offset scrubber over the covariance fixture samples;
+- play/pause and speed controls;
 - sigma selector;
 - local camera presets;
 - readouts for UTC epoch, offset, Q/S/W axis lengths, frame/unit label, and
@@ -62,7 +66,6 @@ Labels and readouts are compact operational UI.
 ## Not In Scope
 
 - API-served covariance products.
-- Interpolation between covariance samples.
 - Imported OEM/CDM covariance.
 - Conversion from Cartesian covariance frames into QSW.
 - Intersection probability readouts.
