@@ -80,7 +80,7 @@ provenance for every assumption.
   drag/POD instrument context.
 - Derived: ORB-SAT-1 box cross-section and ballistic coefficient seed.
 - Synthetic: maneuver schedule, total delta-v budget, covariance growth model,
-  generated ephemeris, and WEZ/intersection scenarios.
+  generated ephemeris, and later deferred WEZ/intersection scenarios.
 - Calibrated-reference: drag and covariance behaviors tuned against GRACE-FO or
   other public POD/accelerometer examples when available.
 

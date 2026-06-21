@@ -565,3 +565,48 @@ Browser checks:
 - Follow-up captures after meridian simplification:
   `orbit-desktop-static-meridians.png` and
   `orbit-narrow-static-meridians.png`.
+
+## Increment 9: Records, Fixtures, and Completion Pass
+
+Status: implemented.
+
+### Outcome
+
+Goal 06 is closed for this branch around uncertainty visualization,
+higher-fidelity ephemeris investigation, UI cleanup, records, and fixtures.
+
+- Deferred the orbit-to-orbit and orbit-to-WEZ intersection probability
+  prototypes to a future branch.
+- Added top-level [DEFERRED_TASKS.md](../../../DEFERRED_TASKS.md) with the
+  high-level plans for those two follow-up prototypes.
+- Updated [PLAN.md](PLAN.md) so the active Goal 06 increment list ends with
+  this completion pass.
+- Updated [README.md](README.md) so the goal acceptance criteria and increment
+  list reflect the final local QSW explorer and deferred intersection work.
+- Updated stale Increment 2 and spacecraft notes so they point to local QSW
+  inspection and later deferred intersection work rather than branch-local
+  probability prototypes.
+- Kept the Goal 06 fixtures in place:
+  [fixtures/orb-sat-1.spacecraft.json](fixtures/orb-sat-1.spacecraft.json) and
+  [fixtures/orb-sat-1.synthetic-covariance.json](fixtures/orb-sat-1.synthetic-covariance.json).
+
+### Validation
+
+Commands run:
+
+```sh
+uv run pytest
+uv run ruff check .
+pnpm --dir apps/web check
+pnpm --dir apps/web build
+pnpm --dir apps/web smoke
+```
+
+Results:
+
+- Full pytest suite: 41 passed, 6 skipped.
+- Ruff: all checks passed.
+- TypeScript check: passed.
+- Vite build: passed, with the existing satellite.js browser-externalization
+  and chunk-size warnings.
+- Playwright smoke: 7 passed.

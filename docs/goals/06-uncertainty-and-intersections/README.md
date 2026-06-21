@@ -2,12 +2,13 @@
 
 ## Objective
 
-Start visualizing propagation uncertainty over time and investigate probability
-of intersection with other uncertain or modeled regions.
+Start visualizing propagation uncertainty over time and prepare the project for
+later probability-of-intersection work with other uncertain or modeled regions.
 
-This goal should move Orb Lab from deterministic traces toward uncertainty-aware
-scenario inspection: covariance growth, ellipsoid rendering, higher-fidelity
-ephemeris inputs, and first-pass intersection probability experiments.
+This goal moves Orb Lab from deterministic traces toward uncertainty-aware
+scenario inspection: covariance growth, local ellipsoid rendering,
+higher-fidelity ephemeris inputs, and UI structure for future probability
+experiments.
 
 ## Why Sixth
 
@@ -22,14 +23,12 @@ outside its intended freshness window.
   drag, maneuver, and data-availability assumptions.
 - The project has a compact uncertainty model that can represent position
   covariance from epoch through day 3.
-- The Three.js scene can render uncertainty ellipsoids along a propagated trace
-  without hiding the nominal orbit or frame context.
+- The app can inspect uncertainty ellipsoids in a local QSW explorer without
+  hiding nominal orbit or frame context in the global orbital view.
 - The investigation records how OEM, CPF, and other POD-like products could
   reduce reliance on TLE-only workflows.
-- The project has a first-pass method for estimating intersection probability
-  between two uncertain orbital states.
-- The project has a first-pass method for estimating intersection probability
-  between an uncertain orbital state and a modeled WEZ ellipsoid.
+- Follow-up intersection probability prototypes are deferred into
+  top-level [DEFERRED_TASKS.md](../../../DEFERRED_TASKS.md).
 
 ## Proposed Increments
 
@@ -50,9 +49,11 @@ outside its intended freshness window.
    see [EPHEMERIS_PRODUCTS.md](EPHEMERIS_PRODUCTS.md).
 8. Split controls from orbital rendering and add denser Earth meridian cues.
    Completed: see [RECORD.md](RECORD.md).
-9. Prototype orbit-to-orbit intersection probability.
-10. Prototype orbit-to-WEZ ellipsoid intersection probability.
-11. Record validation, assumptions, and remaining risks.
+9. Record validation, assumptions, and remaining risks. Completed: see
+   [RECORD.md](RECORD.md).
+
+Deferred intersection prototypes are tracked in top-level
+[DEFERRED_TASKS.md](../../../DEFERRED_TASKS.md).
 
 See [PLAN.md](PLAN.md) for approval-sized implementation increments.
 Implementation notes are tracked in [RECORD.md](RECORD.md).
@@ -127,11 +128,9 @@ The first ORB-SAT-1 metadata fixture lives at
   higher-fidelity products.
 - Covariance in Cartesian ECI/TEME coordinates can become misleading under
   nonlinear propagation; local orbital-frame display may be clearer.
-- Probability-of-intersection results can look authoritative even when the
-  assumptions are intentionally first-pass.
-- WEZ modeling can become a domain rabbit hole. Keep the first model purely
-  geometric: an ellipsoid with frame, center, covariance-like axes, and time
-  validity.
+- Probability-of-intersection and WEZ modeling are deferred to a focused
+  follow-up branch. Keep the first later WEZ model purely geometric: an
+  ellipsoid with frame, center, covariance-like axes, and time validity.
 
 ## Validation
 
@@ -140,8 +139,8 @@ The first ORB-SAT-1 metadata fixture lives at
 - `pnpm --dir apps/web check`
 - `pnpm --dir apps/web build`
 - `pnpm --dir apps/web smoke`
-- Manual browser checks at desktop and narrow viewport sizes for nonblank,
-  correctly framed uncertainty ellipsoids.
+- Manual browser checks at desktop and narrow viewport sizes for nonblank
+  orbital and local QSW render panes.
 
 ## References Checked
 

@@ -3,8 +3,8 @@
 ## Goal
 
 Investigate and prototype uncertainty visualization from epoch through day 3,
-then use that uncertainty model to estimate intersections with other orbits and
-modeled WEZ ellipsoids.
+then leave a clean path for later intersections with other orbits and modeled
+WEZ ellipsoids.
 
 Each increment should be approved before implementation. This goal should stay
 honest about what is measured, inferred, or synthetic.
@@ -645,91 +645,15 @@ over mission geometry.
 Completed decision: split controls from orbital rendering and add denser Earth
 meridian cues before continuing with intersection prototypes.
 
-## Increment 9: Orbit-to-Orbit Intersection Probability Prototype
+## Deferred Follow-Up Work
 
-### Objective
+The orbit-to-orbit and orbit-to-WEZ intersection probability prototypes are
+deferred to a future branch. Their high-level plans are recorded in the
+top-level [DEFERRED_TASKS.md](../../../DEFERRED_TASKS.md).
 
-Estimate probability of close approach between two propagated states whose
-uncertainties grow over time.
+## Increment 9: Records, Fixtures, and Completion Pass
 
-### Scope
-
-- Start with synchronized time samples and two Gaussian position covariances.
-- Compute relative covariance and probability inside a spherical or ellipsoidal
-  encounter volume.
-- Provide deterministic test cases for separated, tangent, and overlapping
-  uncertainty regions.
-- Keep the first result explainable in API output and frontend text/state.
-
-### Expected Files
-
-- Possible module: `src/orb_lab/intersections.py`
-- Tests: `tests/test_intersections.py`
-- Possible frontend overlay or readout after API behavior is approved.
-- Goal docs update.
-
-### Acceptance Criteria
-
-- The prototype can rank low, medium, and high intersection-risk cases.
-- Inputs and outputs include frame, units, time, covariance provenance, and
-  encounter-volume assumptions.
-- The method handles two growing covariance series over the same time window.
-- Limitations are documented, especially Gaussian and synchronization
-  assumptions.
-
-### Validation
-
-- `uv run pytest`
-- `uv run ruff check .`
-- `pnpm --dir apps/web check` if frontend code is touched.
-
-### Approval Question
-
-Approve the first probability method before connecting it to UI workflows.
-
-## Increment 10: Orbit-to-WEZ Ellipsoid Intersection Prototype
-
-### Objective
-
-Estimate probability that an uncertain spacecraft state intersects a modeled
-WEZ ellipsoid over time.
-
-### Scope
-
-- Define a WEZ ellipsoid as geometry with frame, center, axes, orientation,
-  validity interval, and source metadata.
-- Compute probability of the spacecraft position distribution lying inside the
-  ellipsoid at sampled times.
-- Add deterministic tests for outside, boundary, inside, and time-invalid cases.
-- Keep WEZ semantics geometric and unclassified; no real engagement modeling.
-
-### Expected Files
-
-- `src/orb_lab/intersections.py`
-- Possible model additions in `src/orb_lab/models.py`
-- Tests: `tests/test_wez_intersections.py`
-- Possible frontend visualization/readout after API behavior is approved.
-- Goal docs update.
-
-### Acceptance Criteria
-
-- The prototype supports a stationary or time-tagged WEZ ellipsoid.
-- The method reports probability over time and the peak-risk sample.
-- Frame and unit mismatches fail clearly.
-- Documentation says this is a geometric hazard volume, not a validated weapons
-  effects model.
-
-### Validation
-
-- `uv run pytest`
-- `uv run ruff check .`
-- `pnpm --dir apps/web check` if frontend code is touched.
-
-### Approval Question
-
-Approve the WEZ geometry semantics before adding persistent scenario fixtures.
-
-## Increment 11: Records, Fixtures, and Completion Pass
+Status: implemented. See [RECORD.md](RECORD.md).
 
 ### Objective
 
@@ -738,7 +662,7 @@ Make the investigation reproducible and leave accurate implementation records.
 ### Scope
 
 - Add representative fixtures for the selected spacecraft, covariance samples,
-  and intersection examples.
+  and local uncertainty explorer workflow.
 - Record commands run, manual browser checks, and frame/unit assumptions.
 - Update Goal 06 docs from plan language to implementation record language.
 - Update higher-level docs only where the implemented behavior changes the
@@ -768,7 +692,10 @@ Make the investigation reproducible and leave accurate implementation records.
 
 ### Approval Question
 
-Approve Goal 06 completion and decide the next exploration track.
+Completed decision: close this branch around uncertainty visualization,
+higher-fidelity ephemeris investigation, UI cleanup, records, and fixtures;
+defer the two intersection prototypes to top-level
+[DEFERRED_TASKS.md](../../../DEFERRED_TASKS.md).
 
 ## Open Decisions
 
@@ -780,10 +707,8 @@ Approve Goal 06 completion and decide the next exploration track.
   user-selectable mode.
 - Whether the local uncertainty explorer should use `QSW`, `RSW`, or `RCI`
   terminology in the UI, while preserving exact internal frame labels.
-- Whether intersection probability belongs in a new API endpoint or as an
-  optional analysis block on propagation responses.
-- How to represent time-varying WEZ ellipsoids without overbuilding a mission
-  planning system.
+- Intersection probability API and time-varying WEZ representation decisions
+  are deferred to top-level [DEFERRED_TASKS.md](../../../DEFERRED_TASKS.md).
 
 ## Not In Scope
 

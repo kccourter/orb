@@ -22,7 +22,8 @@ The implemented first model is a **position covariance series**:
   marked as `synthetic`.
 
 This keeps Increment 2 small enough to validate and useful enough for Increment
-3 ellipsoid rendering and Increments 5-6 intersection probability.
+3 ellipsoid rendering, Increment 6 local QSW inspection, and later deferred
+intersection probability work.
 
 ## Proposed Schema Concepts
 
